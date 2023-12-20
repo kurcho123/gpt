@@ -1,0 +1,712 @@
+- Address multi-layered SQL injection challenges, including blind and time-based techniques.
+- Combine Sqlmap with tools like Burp Suite for enhanced proxy capabilities.
+- Craft complex tamper script chains for highly specific WAF bypass scenarios, adapting to evolving WAF technologies.
+- Craft custom injection payloads using --prefix and --suffix options.
+- Create custom automation scripts that interface with the Sqlmap API.
+- Delve into advanced SQL syntax manipulation, using nested queries, subqueries, and UNION-based injections.
+- Design automated workflows for continuous monitoring and exploitation of new or temporary SQL injection vulnerabilities.
+- Develop advanced payloads using lesser-known SQL functions and procedures.
+- Employ conditional SQL statements to retrieve specific data sets.
+- Experiment with Sqlmap's advanced scanning modes for optimized performance.
+- Experiment with different encoding methods (URL, Base64, Hex) to camouflage malicious payloads.
+- Explore methods for maintaining persistent access through SQL injection, such as integrating backdoors.
+- Incorporate Sqlmap into comprehensive penetration testing methodologies.
+- Incorporate advanced data extraction techniques like differential analysis and binary search algorithms.
+- Investigate timing-based evasion techniques, using time delays to mask SQL injections.
+- Leverage the Sqlmap API for automated scanning and exploitation processes.
+- Modify existing scripts or create new ones for targeted attacks and advanced evasion techniques.
+- Strategize the use of Sqlmap in red team operations, simulating advanced threat actors.
+- Tailor Sqlmap's injection techniques for applications with complex input validation or intricate database structures.
+- Tweak performance settings including request delay, timeout, and retry count.
+- Use --os-shell for direct OS access and --os-pwn for out-of-band connections.
+- Utilize API-based integrations with vulnerability scanners, SIEM systems, and custom reporting tools.
+- Utilize Sqlmap for database privilege escalation, leveraging SQL injection to execute administrative operations.
+- Utilize advanced tamper scripts for specific DBMS and WAFs.
+- Utilize tamper scripts like 'between', 'space2comment', and 'charencode' to bypass common WAFs.
+---------------------------
+----------------------------
+---------------------------------
+-----------------------------------
+---------------------------------------
+----------------------------------------
+-----------------------------------------
+------------------------------------------
+Advanced Enumeration and Data Retrieval
+Advanced Tamper Script Usage
+Automating Sqlmap with APIs
+Bypassing Web Application Firewalls (WAFs)
+Custom Injection Techniques
+Handling Complex SQL Injection Scenarios
+Integrating Sqlmap with Other Tools
+Optimizing Sqlmap for Performance
+Privilege Escalation and Post-Exploitation
+Sqlmap in Penetration Testing Workflows
+
+
+SQL Injection is a type of cyber attack where malicious actors exploit vulnerabilities in web applications to inject malicious SQL code into backend databases. This can lead to the exposure of sensitive data, unauthorized access to systems, and even complete system compromise.
+
+SQLmap is a powerful open-source tool used to automate the process of detecting and exploiting SQL Injection vulnerabilities in web applications. It is a command-line tool that can be used to enumerate databases, extract data, and even execute operating system commands on the underlying system.
+
+Installing SQLmap
+SQLmap is a cross-platform tool and can be installed on Windows, Linux, and macOS. Here are the steps to install SQLmap on each of these platforms:
+
+On Windows:
+Download the latest version of SQLmap from the official website.
+Extract the downloaded file to a desired location.
+Open the command prompt and navigate to the extracted SQLmap directory.
+Run the “python sqlmap.py” command to start SQLmap.
+On Linux:
+Open a terminal window and type “sudo apt-get update” to update the system package list.
+Type “sudo apt-get install sqlmap” to install SQLmap from the official repository.
+Verify the installation by running the “sqlmap” command in the terminal.
+On macOS:
+Install Homebrew package manager by running the following command in the terminal: “/usr/bin/ruby -e “$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)""
+Type “brew install sqlmap” to install SQLmap.
+Verify the installation by running the “sqlmap” command in the terminal.
+To verify the successful installation, simply run the “sqlmap” command in the terminal or command prompt. If SQLmap is installed correctly, you should see the SQLmap logo and version information displayed in the terminal.
+
+Basic Usage
+Using the “sqlmap -u <target URL>” command to scan for vulnerabilities
+Using the “sqlmap -u <target URL> — dbs” command to enumerate the list of databases
+Using the “sqlmap -u <target URL> -D <database name> — tables” command to enumerate the list of tables in a database
+Using the “sqlmap -u <target URL> -D <database name> -T <table name> — dump” command to extract data from a table
+Advanced Usage
+Modifying HTTP headers and cookies
+To modify HTTP headers and cookies during a SQLmap scan, you can use the --headers and --cookie options respectively. Here's an overview of how to use them:
+
+--headers: This option allows you to add or modify HTTP headers for the requests sent during the scan. You can use it to modify headers such as User-Agent, Referer, Cookie, etc.
+
+For example, to modify the User-Agent header to "Mozilla/5.0" during a SQLmap scan, you would use the following command:
+
+sqlmap -u <target URL> --headers="User-Agent: Mozilla/5.0"
+--cookie: This option allows you to set or modify cookies for the requests sent during the scan. You can use it to modify cookies such as PHPSESSID, JSESSIONID, etc.
+
+For example, to modify the PHPSESSID cookie to "12345" during a SQLmap scan, you would use the following command:
+
+sqlmap -u <target URL> --cookie="PHPSESSID=12345"
+Note that you can also use the --cookie-file option to load cookies from a file. This can be useful if you want to reuse cookies from a previous session.
+
+By modifying HTTP headers and cookies, you can bypass certain security measures that may be in place, such as web application firewalls or authentication systems.
+
+Tampering with request parameters
+To tamper with request parameters during a SQLmap scan, you can use the --data and --tamper options. Here's an overview of how to use them:
+
+--data: This option allows you to set or modify the data sent in the request body during the scan. You can use it to modify parameters such as username, password, id, etc.
+
+For example, to modify the id parameter to "1' OR 1=1#" during a SQLmap scan, you would use the following command:
+
+sqlmap -u <target URL> --data="id=1' OR 1=1#"
+--tamper: This option allows you to use custom tampering scripts to modify the data sent in the request body. Tampering scripts can be used to encode or encrypt data in a way that bypasses certain security measures, or to modify data in a way that triggers specific SQL Injection vulnerabilities.
+
+For example, to use the apostrophemask.py tampering script to encode apostrophes in a request body, you would use the following command:
+
+sqlmap -u <target URL> --data="id=1' OR 1=1#" --tamper=apostrophemask.py
+You can also use multiple tampering scripts by separating them with a comma.
+
+By tampering with request parameters, you can bypass certain security measures that may be in place, such as input validation or sanitization.
+
+Bypassing filters and firewalls
+Bypassing filters and firewalls during a SQLmap scan can be done using various techniques. Here are a few examples of how to use SQLmap to bypass different types of security measures:
+
+Bypassing input filters: If a web application filters or blocks certain characters or keywords in input parameters, you can try to bypass the filter by encoding or obfuscating the input. For example, you can try URL encoding, HTML encoding, or using alternate character sets.
+
+To URL encode the id parameter during a SQLmap scan, you would use the following command:
+
+sqlmap -u <target URL> --data="id=%27+OR+1%3D1--"
+Bypassing web application firewalls (WAFs): If a web application has a WAF in place that blocks SQL Injection attacks, you can try to bypass the WAF by using a technique called “tamper script evasion”. This involves modifying the SQL Injection payload in a way that bypasses the WAF’s signature detection.
+
+To use the tamper/space2hash.py script to evade a WAF during a SQLmap scan, you would use the following command:
+
+sqlmap -u <target URL> --data="id=1' OR 1=1#" --tamper=tamper/space2hash.py
+Bypassing database firewalls: If a database has a firewall in place that blocks certain SQL commands or queries, you can try to bypass the firewall by using a technique called “time-based blind SQL Injection”. This involves sending SQL Injection payloads that cause the database to delay or sleep for a certain amount of time, which can be used to infer information about the database.
+
+To use time-based blind SQL Injection during a SQLmap scan, you would use the following command:
+
+sqlmap -u <target URL> --data="id=1' AND SLEEP(5)--"
+Utilizing SQLmap API
+The SQLmap API can be used to integrate SQLmap into custom scripts or programs, or to automate SQL Injection testing. Here’s an overview of how to utilize the SQLmap API:
+
+Start the SQLmap server: Before you can use the SQLmap API, you need to start the SQLmap server. To start the server, use the following command:
+
+sqlmapapi.py -s
+This will start the SQLmap server on the default port (8775).
+
+Send requests to the API: Once the SQLmap server is running, you can send requests to it using the API. Requests can be sent using HTTP GET or POST methods, and can include various parameters such as the target URL, injection technique, and tamper scripts.
+
+For example, to scan a target URL using the Boolean-based blind injection technique and the apostrophemask.py tamper script, you would send an HTTP POST request to http://localhost:8775/task/new with the following JSON payload:
+
+{
+    "url": "<target URL>",
+    "technique": "B",
+    "tamper": "apostrophemask.py"
+}
+Get task status and results: After sending a request to the SQLmap API, you can check the status of the task and retrieve the results. Task status can be checked using an HTTP GET request to http://localhost:8775/task/<task ID>/status, while task results can be retrieved using an HTTP GET request to http://localhost:8775/task/<task ID>/data.
+
+For example, to check the status and retrieve the results of a task with ID 1, you would send the following HTTP GET requests:
+
+http://localhost:8775/task/1/status
+http://localhost:8775/task/1/data
+Utilizing the SQLmap API can be useful for automating SQL Injection testing and integrating SQLmap into custom scripts or programs.
+
+Common Attacks and Countermeasures
+Error-based SQL Injection
+Error-based SQL Injection is a type of SQL Injection that relies on triggering errors in the target application to extract information from the database. Here’s an overview of how to perform Error-based SQL Injection using SQLmap:
+
+Identify the target: As with any SQL Injection testing, the first step is to identify a target application that may be vulnerable to Error-based SQL Injection.
+Determine the injection point: Once you’ve identified a target application, you need to determine where in the application’s input fields or parameters you can inject SQL code. You can use SQLmap’s built-in scanning features to help identify injection points.
+Specify the injection technique: After identifying the injection point, you need to specify the Error-based SQL Injection technique using the --technique option. The Error-based SQL Injection technique is designated by the letter E.
+Run the injection: Once you’ve specified the injection technique, you can run the injection using the --dump option to extract data from the database.
+Here’s an example command to perform Error-based SQL Injection using SQLmap:
+
+sqlmap -u "http://example.com/vulnerable.php?id=1" --technique E --dump
+This command specifies the target URL and injection point using the -u option, the Error-based SQL Injection technique using the --technique option, and the --dump option to extract data from the database.
+
+Blind SQL Injection
+Blind SQL Injection is a type of SQL Injection that does not display errors or information that can help identify the vulnerability, making it more difficult to detect. Here’s an overview of how to perform Blind SQL Injection using SQLmap:
+
+Identify the target: As with any SQL Injection testing, the first step is to identify a target application that may be vulnerable to Blind SQL Injection.
+Determine the injection point: Once you’ve identified a target application, you need to determine where in the application’s input fields or parameters you can inject SQL code. You can use SQLmap’s built-in scanning features to help identify injection points.
+Specify the injection technique: After identifying the injection point, you need to specify the Blind SQL Injection technique using the --technique option. The Blind SQL Injection technique is designated by the letter B.
+Use the --data option: Blind SQL Injection usually involves sending custom data in the HTTP request to the server. You can use the --data option to specify the data that SQLmap should send.
+Use the --string and --not-string options: Blind SQL Injection relies on identifying whether or not certain conditions are true or false, based on the server's response. You can use the --string and --not-string options to specify strings that SQLmap should look for in the server's response to determine whether a condition is true or false.
+Here’s an example command to perform Blind SQL Injection using SQLmap:
+
+sqlmap -u "http://example.com/vulnerable.php" --data="username=admin&password=password" --technique B --string="Welcome, admin!" --not-string="Invalid login"
+This command specifies the target URL and injection point using the -u option, the custom data to send using the --data option, the Blind SQL Injection technique using the --technique option, and the --string and --not-string options to specify the strings to look for in the server's response.
+
+Defense mechanisms and countermeasures
+There are several defense mechanisms and countermeasures that can be used to prevent or mitigate SQL Injection attacks like the ones performed using SQLmap. Here are some common ones:
+
+Parameterized queries: One of the most effective ways to prevent SQL Injection is to use parameterized queries. This involves using placeholders for user input in SQL statements and binding them to typed parameters at runtime, which helps prevent malicious SQL code from being executed.
+Input validation and sanitization: Input validation involves checking user input against predefined rules, such as input length, character types, and format, while input sanitization involves filtering out potentially harmful characters or commands from user input. This can help prevent malicious input from being executed as SQL code.
+Principle of least privilege: The principle of least privilege involves limiting user privileges and access to only what is necessary for their job functions. This can help prevent SQL Injection attacks by limiting the damage that can be done with stolen or compromised credentials.
+Network segmentation and firewalls: Network segmentation involves dividing a network into smaller segments or subnets, each with its own security controls, while firewalls can be used to filter and block traffic based on predefined rules. These measures can help prevent attackers from gaining access to sensitive data or systems.
+Web application firewalls (WAFs): WAFs are designed to monitor and filter incoming traffic to web applications, detecting and blocking malicious traffic such as SQL Injection attacks. They work by analyzing traffic patterns and using predefined rules to filter out malicious traffic.
+Implementing these defense mechanisms and countermeasures can help prevent or mitigate SQL Injection attacks like the ones that can be performed using SQLmap. It’s important to remember that security is an ongoing process and requires continuous monitoring and updating to stay effective against evolving threats.
+
+Week 7 - Advanced SQLMap
+Custom SQLMap Payloads
+It’s Week 7 of our Web App Hacking Tips & Tricks Series! Today we’ll be covering one of my favorite topics, Advanced SQL Injection.
+ 
+Have you ever been testing an application that appears vulnerable to SQL Injection, but you were unable to automate using SQLMap? This has happened to me in the past and is a major pain-in-the-butt. I used to add a “tamper=space2comment” and hope for the best! Nowadays I have a much better approach.
+ 
+To start off, I always recommend manually finding a working Proof-of-Concept (POC) with Burp Suite (if you want a future post on manual SQL Injection tips, let me know in the comments). From here, you can add your own custom payload into SQLMap. The folder containing all the payload files can be found here:
+ 
+/usr/share/sqlmap/data/xml/payloads/
+ 
+First, add the payload in the attached photo below to your ‘boolean_blind.xml’ payload file. Since SQLMap can be finnicky, I’ve found that simplifying the custom payload to only its inference is the most reliable method. Then, use the flags ‘prefix’ and ‘suffix’ to construct the rest of the Proof-of-Concept query you’ve found earlier. For example, if your working POC looks like:
+ 
+test.php?id=1']+OR+[1=1]);/*
+ 
+Then to exploit with your custom payload, your SQLMap command would be:
+ 
+sqlmap -u "<target-url>" --dbs --prefix="']+OR+[" --suffix="]);/*"
+ 
+If all goes well, you should have successfully automated SQL Injection using your custom payload!
+ 
+If you find you’re still having trouble or are dealing with connection errors, just proxy through Burp Suite using the ‘proxy’ flag. I’ve found this alone solves a good deal of connection errors. Try the ‘force-ssl’ flag too.
+
+
+Advanced sqlmap Case Study
+May 6, 2022
+· 6 min read
+ ·
+ ·Share on:
+Summary
+Many new bug bounty hunters will blindly rely on the output of tools to magically find them bugs. As most experienced hunters know, the key to long-term success is to understand how to effectively use the many great tools and fine-tune these tools to achieve results in the form of valuable, challenging bugs.
+
+Since I joined the Synack Red Team, I have been digging into sqlmap and the intricacies involved in finding SQL injections "in the wild". This will be the first of hopefully several posts on how to use sqlmap to work around challenging real-world scenarios where SQL injections exist. I hope you find this useful in your research!
+
+On Manual Testing
+In almost all cases I never run sqlmap without first manually confirming the presence of a vulnerability! Don't be an irresponsible hunter - do your research manually or with low-impact scanning first!
+
+Scenario
+In this scenario I was able to find a SQL injection vulnerability through source code auditing of the application I was testing. The application took a certain parameter and issued 2 SQL queries with it. The first query looked like this (partial query):
+
+... select OID from pg_namespace where nspname='{parameter}' ...
+If this query succeeded (returned a row), the code would issue a 2nd query as below:
+
+select distinct object from {parameter} ...
+If the first query did not return a row, the code would instead throw a Python error:
+
+AttributeError: 'NoneType' object has no attribute
+So this means that in order to pass both queries the {parameter} needed to be a valid string in the first query and a valid table or view name in the 2nd query! Unfortunately this is inherently incompatible with the need to be able to construct a valid boolean true/false expression. I had to find another approach.
+
+The Approach
+I determined that it was not going to be possible to get a payload that would successfully pass both queries, therefore I determined that I had to construct a payload that would satisfy the first query enough to generate a true/false result. "True" would mean the code would successfully execute the first query, and fail in the 2nd query. "False" would mean the code would successfully execute the first query, but because a row was not returned from the query, it would generate the AttributeError message. This got me set up with the "True" and "False" conditions I needed for sqlmap to work properly:
+
+"True": Error message contains select distinct object from
+"False": Error message contains AttributeError: 'NoneType'
+One other Wrinkle
+Because of the nature of the code involved, the SQL injection payload needed to be placed in the middle of the query parameter string in a specific location. Let's say the query parameter looked like this:
+
+param=canary.bluebird
+The position of the SQL injection payload had to be here:
+
+param=canary.bluebird
+          ^^
+Basically, it had to be placed before the . character, in the middle of the string, in order for the first SQL query to successfully execute.
+
+Validating the Approach
+I tested this approach by the following query:
+
+param=`cana'||(select/**/'r'/**/where/**/1=1)||'y.bluebird`
+I confirmed this corresponded to the "true" result (getting past the first SQL query and a syntax error on the 2nd). Changing the 1=1 to 0=1 confirmed the behavior of the "false" result (AttributeError). Great!
+
+Now, on to getting sqlmap to follow this same manual approach.
+
+A Couple more Wrinkles
+A few other wrinkles came up in my manual testing:
+
+Both "true" and "false" resulted in an error page with HTTP status 500
+The URL parameter had to be issued without URL encoding (i.e. ' instead of %27)
+Because of this, the inclusion of space characters would break the request, so they had to be replaced with comments /**/
+I had to make sure that sqlmap followed these as well.
+
+Wrangling sqlmap
+Let's get the easy stuff out of the way first:
+
+Don't encode URL parameters: use the --skip-urlencode flag
+Change spaces to comments: use the --tamper=space2comment flag to invoke this tamper script
+Tamper scripts modify the payload before it is sent to the target site!
+Match HTTP code 500 as part of the "true" result: use the --code=500 flag
+As an interesting side note: without this, sqlmap will assume a non-2xx status code is a failure (neither true nor false) and will ignore the result
+Now we need to get the positioning of the payload correct. We can use the --prefix and -suffix flags for this as follows:
+
+--prefix="cana'||" --suffix="||'y.bluebird"
+If you are following along, you might wonder where the r character in canary went. Remember the injection point needs to be before the . in the valid parameter string. Remember a valid query "true/false" will look like this:
+
+param=`cana'||(select/**/'r'/**/where/**/1=1)||'y.bluebird`
+You can see the r is being returned from the inner select statement if the where clause evaluates to "true". If it evaluates to "false", no value is returned, and we know that the parameter value of canay.bluebird (no r) will return 0 rows. This type of SQL injection corresponds to the sqlmap payload with "original value" in the name.
+
+Tip: sqlmap has two types of payloads: one where the boolean condition returns the original value inline in the query, and the other where the boolean result is appended to the original value (the classic AND 1=1 type of payload)
+In this case, trying to get an AND 1=1 type payload in the middle of our parameter would make no sense at all! Therefore we're looking only for blind boolean payloads that use the original value in the constructed query string.
+
+The final piece of the puzzle is helping sqlmap determine a true vs false result. In this case we use the --string parameter to suggest to sqlmap text that is guaranteed only to appear when the boolean value is true. In our analysis we determined the displayed error message will contain the string select distinct object from.
+
+Putting it all together, the final sqlmap command line looked like this:
+
+...&param=r -p param --prefix="cana'||" --suffix="||'y.bluebird" --tamper space2comment --level=3 --risk=2 --string "select distinct object from ucon_p" --code=500 --dbms PostgreSQL --skip-urlencode --no-escape --no-cast --banner --technique=B
+With this combination of parameters I was able to translate my manual confirmation of the SQLi with the automatic data gathering magic of sqlmap
+
+Feedback?
+Hopefully this article was helpful in outlining how to reason through a complex SQL injection vulnerability. If you have any comments or want to collaborate on a report feel free to DM me on Twitter, I'm always open to collaboration with trusted people.
+
+Links
+A couple other resources that cover this sort of advanced sqlmap content well:
+
+https://cybr.com/ethical-hacking-archives/sqlmap-cheat-sheets-to-help-you-find-sql-injections/
+https://thegreycorner.com/2017/01/05/exploiting-difficult-sql-injection.html
+
+Exploiting difficult SQL injection vulnerabilities using sqlmap: Part 1
+05 Jan 2017
+Introduction
+Useful sqlmap options
+Prefix and suffix
+Specifying Injection technique and tests
+Risks and levels
+Detection options
+Second order injection
+Tamper scripts
+Custom written test payloads
+Verbosity and debugging injection checks
+Auto answering
+Session flushing
+Other options
+Tweaking sqlmap options to detect tricky injections
+Introduction
+
+A number of times when discovering "tricky" SQL Injection vulnerabilities during penetration tests, I have taken the approach of exploiting them by writing custom tools.  This usually after spending 5 minutes blindly poking at the vulnerability with sqlmap, and then stopping when it didn't immediately magic the answer for me.
+
+OK, there have been a number of times where sqlmap has NOT been a suitable tool to use for various reasons, such as very particular filtering or data retrieval requirements, but there has also been a number of cases where I probably gave up on it too fast because I didn't properly understand how it worked or the extent of its capabilities. And this resulted in me taking much longer than necessary to exploit the vulnerability.
+
+While writing custom tools can certainly be "fun" (for some definitions of "fun"), and while it provides some good coding practice and is an excellent way to ensure that you understand the injection flaw and its exploitation extremely well, its also very time consuming.  Writing your own injection tool often involves redoing a lot of work that has already been done by others - the digital equivalent of reinventing the wheel. You need to put together a capable HTTP sending/receiving framework, you need to parse HTML responses, you need to discover the (database specific) SQL commands that will allow you to retrieve data within the limitations imposed by the vulnerability, you need to be able to extract, group, infer, convert and/or join the retrieved data and you need to mentally map out the logic needed to tie all these parts together and turn it into working code with a usable interface. Its a deceptively large amount of effort, especially when blind injection is involved, and I would consistently underestimate how long it would take to perform.
+
+Given that sqlmap already has all this functionality, being in particular a very effective tool for retrieving data via all types of SQL injection vulnerabilities,  I recently decided that it might be a good idea to spend some of my time to gain an improved understanding of the tool, so that in future I would be able to make more frequent use of it.
+
+For my vulnerability test bed, I used some of the SQL injection labs from the Pentester Labs website, namely the Web for Pentester and Web for Pentester II exercises, because those particular exercises are freely downloadble, easy to self host and provide some great examples of SQLi vulnerabilities that require use of some of sqlmap's custom options for exploitation.
+
+This will be the first in a series of posts where I share some of what I learned during this process. This first post will mainly seek to introduce and explain the relevant sqlmap options that I used and outline a process that can be used to get sqlmap to identify an SQL injection flaw that you have discovered through other testing activities.  Future entries will provide examples of actually using this to exploit SQL injection vulnerabilities that sqlmap cannot easily detect on its own.
+
+Note: While I will use their content as examples, the intent here is NOT to explain how to discover or do manual exploitation of the SQLi vulnerabilities in the PentesterLab exercises - because that has already been written up in the PentesterLab courseware available at their web site. If you don't already know how to do manual discovery of SQLi vulnerabilities, you can check out their site, or any of the many other SQLi references on the Internet to learn this (for the record though, I think the PentesterLab stuff is a fantastic introduction to web application pentesting, and I wish I had access to it when I first started doing webapp testing).
+
+Useful sqlmap options
+
+Before I jump into working through specific examples, I wanted to describe the purpose of some sqlmap options.  More advanced use of sqlmap, in terms of actually tweaking its operation in order to make a difficult injection operate, will require that you actually understand how these options work. In essence, this is the README I wish I had received when I moved beyond the bare basics in my use of the tool, as I definitely would have used sqlmap much more extensively had I understood these particular options as well as I do now. Hopefully you can now benefit from my having learned this the "hard" way, e.g. via trial and error.
+
+Prefix and suffix
+
+The prefix (--prefix) and suffix (--suffix) options configure the strings that should be included with each SQL injection payload in order to begin, and then terminate, the Injection.  So what does this mean exactly?
+
+Take this simple example of an injectible query:
+
+$query = "SELECT first_name, last_name FROM users WHERE name = '" . $_GET["username"] . "'";
+
+
+Whats an example of an injection string that would work here?  Something like the following would work as a simple POC of a union injection.
+
+' UNION SELECT NULL,NULL -- a
+
+
+This closes the single quoted string before our injection point with a single quote ('), seperates the next statement with a space ( ), adds our injection query of a UNION SELECT with a column count matching that of the existing SELECT query, and then comments out the remainder of the original query to ensure syntactical correctness.  The prefix in this case is the single quote and space (' ) used  before the UNION SELECT, and the suffix is the characters (a space, two dashes, another space and the letter "a") used to comment out the remainder of the original query ( -- a).
+
+The following options can be used to configure sqlmap to use this prefix and suffix:
+
+ --prefix="' " --suffix=' -- a'
+
+
+Now, these particular examples of prefixes and suffixes (or ones that are functionality identical) are ones that sqlmap will be able to figure out itself, so you will rarely need to specify values like this.  However, this hopefully does help you in understanding what these options do, because they are quite important ones to grasp if you want to use sqlmap for more difficult injections. In fact, I put these options first in the list of ones I wanted to describe because as I was working through this process of learning how to make sqlmap identify certain injection vulnerabilities, these were the ones that I used the most.  Also, finally learning what these did was an "AHA!" moment for me, as I have been aware of the options existence for an embarassingly long time without understanding what they did.
+
+Note: Why use NULL values in the UNION SELECT? NULL is a great value to use in UNIONS when trying to determine the correct number of columns in an injection, as it can sit in place of a number of different field types, such as numbers, strings and dates.
+Note2: Why the extra space and the "a" character after the comment? Sometimes, inserted comments at the end of an injection are not properly recognised by the database unless there is a whitespace character to follow. Since whitespace characters on their own are sometimes not easily identifiable when displayed on screen (depending on what other text follows) its helpful to include other text afterwards so you can easily see there is something following the comment. You will see sqlmap do this when you look at some of the injection strings it uses.
+
+Specifying Injection technique and tests
+
+There are a number of different SQL injection techniques available for use in sqlmap, which are configured via the --technique option, and sqlmap comes with a number of different in built tests for exploiting vulnerabilities using those techniques. By default, sqlmap will enable all possible techniques when trying to identify an injection vulnerability, and will run all associated tests that meet the configured risk and level settings (discussed later).
+
+If you have manually discovered a SQL injection flaw in a website and want to use sqlmap to exploit the vulnerability, you may already know the correct technique, as well as the most appropriate payload configuration to use, and this is where specifying these options manually can be useful. Manual specification of these settings helps prevents less effective techniques from being chosen by sqlmap, and cuts down on the amount of traffic sent by sqlmap during its detection period.
+
+A brief listing of the injection techniques available for use by sqlmap is listed below in order of preference. You can select the appropriate ones by using the --technique switch followed by a listing of the letters associated with the method/s you wish to use.  The default is all options, (e.g. "--technique=BEUSTQ").  The descriptions provided below are only intended as high level reminders of each technique
+Stacked queries (S) - This involves stacking whole new SQL queries onto the end of the existing injectable query. Its the preferred method to use if available, because there are a number of exploitation actions that wont be available to you using any other method, however the use of this method does require support from the database and API. You may not necessarily be able to see the results of your stacked query in the page response, so when actually retrieving data (as opposed to performing other operations such as INSERTS) you may want to use another technique such as Unions.
+Union query based (U) - This involves retrieving data by joining a second select statement to the original, via the UNION SELECT statement. You need to be able to see the results from the original SELECT query (and hence your UNION) in the page response for this method to be usable.
+Error based (E) - This technique retrieves data by manipulating database error messages to directly display that data. To use this method, you need to be able to see database error messages in page responses.
+Inline queries (I) - This technique uses inline database queries to retrieve data - essentially a query embedded within another query like this "SELECT (SELECT password from user) from product".  I have not personally had the occasion to use this option in sqlmap, and while inline queries can be used more widely than this in manual injection scenarios, it appears that you need to be able to see the inline queries result in the page response for this to be usable through sqlmap.
+Boolean blind (B) - This retrieves data from the database by asking a series of True/False style questions in your injections, and determining the result (True or False) based on identifiable changes in the response. To use this option, you need to be able to be able to trigger some sort of identifiable state change in HTTP response content from logically different, but syntactically correct database queries (e.g. a different page response only resulting from an invalid database query doesn't count here).  This technique will require more requests and time to perform than those previously listed, as the data must be retrieved indirectly via boolean inference.
+Time based blind (T) - This technique is similar to boolean blind, in that it retrieves data via posing a number of True/False style questions to the database, however instead of determining the answers to these questions via the content of a response, it is done using the amount of time a response takes. This is done through associating deliberate delays with particular answers via database statements that consume a noticeable amount of time, like sleep. This is the most time consuming method of data retrieval, and is sensitive to errors introduced by network load. Without careful custom configuration, you may find sqlmap selecting this technique for trickier injection vulnerabilities that can be exploited by more efficient means.
+
+
+Selecting a particular technique, or set of techniques will limit the payloads that sqlmap will use to those associated with that/those technique/s. It is also possible to further filter the attempted payloads via the --test-filter and --test-skip options to target payloads that contain (or do not contain) particular text within their name.
+
+If, for example, you know your target SQLi vulnerability exists within the 'ORDER BY' clause of a query, why not filter for only these test payloads by using:
+
+--test-filter='ORDER BY'
+
+
+In addition, if you write your own custom test payload for an injection, you can use only that particular payload by setting a filter for a unique string you have added to the name.
+
+Note: To have the best chance of being able to configure sqlmap to detect and exploit a given difficult vulnerability, its important that you properly understand the type of injection you wish to use and the requirements for its exploitation. This is because for injection vulnerabilities that sqlmap cannot find on its own you have to be able to create an effective POC exploit manually to use as a basis for correctly setting sqlmap's configuration . Hopefully this brief summary of the available injection types is appropriately clear and detailed in order to provide a sufficient refresher, but if you are unclear on these techniques you may wish to do further research on any techniques you are unfamiliar with before continuing.
+
+
+Risks and levels
+
+The risks and levels settings in sqlmap will control which test payloads will be attempted during the detection run to identify an SQLi vulnerability. Each test payload has a configured level and risk setting, and if the configured threshold is not met for that payload during a particular run of the tool, that particular payload will not be used.
+
+Risk in sqlmap refers to the risk of a failure, potential database damage or error in data retrieval associted with using an associated payload.  Available risk settings range from 1 to 3, with 1 (the lowest level) being the default.
+
+Level refers to the number of requests required to use that associated payload for exploitation. Available level settings range from 1 to 5, with 1 again the default.
+
+A common recommendation given in various usage guides is to increase the risk and level settings if sqlmap does not identify a vulnerability in its default configuration, however in my experience for trickier injection vulnerabilities this change alone is often not sufficient.
+
+
+Detection options
+
+Using the boolean blind injection technique will often require that you tell sqlmap what to look for in the HTTP response content in order to distinguish a True condition from a False. There are a number of options in sqlmap that allow you to configure this behavior, such as --string and --not-string (configuring strings that should appear in True and False responses respectively), --regexp (allowing you to set a regular expression to match to determine the True condition), --code (provide a HTTP status code to match True), --text-only (compare responses based on text content) and --titles (compare responses based on page title).
+
+A neat thing you can do with the --string and --not-string settings is to use Python hexadecimal backslash quoting to do multi line matching. Here is an example showing how to match a section of HTML that includes newlines (\x0a) and tabs (\x09).
+
+
+--string='Name\x0a\x09\x09Stephen'
+
+When your detection needs are more complex than what can be satisfied by the above options, there is also another sqlmap feature that with a little bit of imagination you can abuse in order to perform more complex comparative logic, which leads us to...
+
+Second order injection
+
+sqlmap contains a --second-order option, which is intended to be used to enable exploitation of second order SQL injection vulnerabilities, where the results of an SQL injection need to be retrieved from a different URL than that is used to actually perform the injection.  The option allows you to provide a single URL which will be requested by sqlmap after each injection payload is sent, and then parsed as per normal configured sqlmap behavior.
+
+By setting the --second-order option to point to your own locally run custom forwarding and parsing server, you can make use of this option to return arbitrary content to sqlmap, perhaps based on data you have automatically retrieved from the target site. This capability can be used to do things such as retrieve data from a dynamically changing second order URL at the target site, or to retrieve content from the remote site and perform complex parsing or logic checks on it, passing through to sqlmap something that it can process using its inbuilt functionality.
+
+This link contains a modifiable second-order forwarding server that I wrote in Python to work with sqlmap, which can be run locally from the command line.  It starts its own http server locally on the loopback address, and when it receives a request from sqlmap it can request data from another website, then return the (optionally) parsed data back to sqlmap.  It is based on Python classes that I wrote specifically to facilitate reuse and modification, so if you can code simple Python you can change it to do any parsing or fetching job you wish.
+
+
+Tamper scripts
+
+Tamper scripts in sqlmap allow you to make programmatic changes to all the request payloads sent by sqlmap, in order to facilitate the bypass of web application firewalls and other filters.  If you are dealing with filters that prohibit, for example, all whitespace within an injection string, there is a tamper script configured that can help (--tamper=space2comment).  A reasonably up to date listing of available tamper scripts and their purpose is available here.
+
+
+Custom written test payloads
+
+sqlmap comes configured with a large number of test payloads that it can use to perform injections. These are defined within xml files named after the associated injection technique stored in xml/payloads under the sqlmap root path.  You can add your own payloads into these files by copying the xml nodes of an existing test (one thats simlar to the one you want to create) and modifying it as required.  There is an example of doing this here, and a specific example of how to use custom test payloads to exploit a boolean blind issue inside the ORDER BY clause will be provided in a future post.
+
+
+Verbosity and debugging injection checks
+
+One extremely useful option for troubleshooting sqlmap's detection process is the output verbosity option.  The specific setting I use most frequently when getting an injection working is -v3, which will show each raw payload that is sent by sqlmap. This allows you to compare the payloads sent by sqlmap to your own POC SQL injection string developed during discovery of the vulnerability, to determine where sqlmap is incorrectly diverging.  If you need to use tamper scripts as well to bypass a filter, you can try verbosity level -v4 to also see the HTTP requests sent, as -v3 verbosity will not show the affect of tamper scripts.
+
+Note: You can also configure sqlmap to work through an intercepting proxy for debugging purposes.  However, while I generally always have Burp Suite running when Im testing any web application, I usually prefer to avoid filling up my proxy history and slowing down the operation of sqlmap by doing this. Sometimes, if I really want to have a close look at requests and responses, I will run up a separate proxy instance using something like ZA Proxy.
+
+
+Auto answering
+
+Under certain circumstances, sqlmap will ask you the same set of one or more repeated questions every time you run the tool. Some of these questions are without their own associated command line options, and therefore without an obvious way to inform sqlmap of the desired behavior so you don't have to repeatedly answer the same question the same way every time sqlmap prompts you.  The --answers option allows you to provide a standard response to these questions - to use it, pick a unique term from the question itself, and provide this along with the desired response.
+
+For example, to preemptively answer Yes to allow sqlmap to attempt to "optimize" timing settings during blind timing based injections, use the following.
+
+--answers='optimize=Y'
+
+Session flushing
+
+sqlmap keeps session information about each url, including which techniques and payloads have been confirmed to work and what data has been retrieved from the site.  If a non optimal payload type has been associated with a particular url within the relevant session, you may want to clear that session information in order to try and get a new payload to work.  You can flush all data associated with a URL, and force the detection process to run again, using the following option.
+
+--flush-session
+
+
+Other options
+
+Some other options I commonly use are the parameter option which specifies which parameter is used to perform the injection (e.g. -p 'vulnerable_parameter') and the options to specify the database (e.g. --dbms='mysql') and the Operating System (--os='linux') in use on the remote server.  These all help sqlmap to avoid making extraneous requests beyond what you already know will be effective based on your knowledge of the target web application.  Sometimes of course the injection point is not within a parameter, in which case sqlmap has other options which can be used to target its operation, such as the asterisk character (*) which can be used to set manual injection point within a request.
+
+
+Tweaking sqlmap options to detect tricky injections
+
+Before you can use sqlmap to effectively exploit an injection issue, you must get it to detect the vulnerability, which associates one or more injection techniques and payloads with the URL associated with the issue.  Once this has occurred, the detection process does not need to run again, and sqlmaps options for exploitation and data retrieval can be immediately used on subsequent executions of the tool.
+
+The following is the process I use for taking a manually discovered SQL injection vulnerability and configuring sqlmap to exploit it.
+Develop the manual exploit to the point where a POC for the best applicable exploitation technique exists. For a UNION SELECT vulnerability, this means you want to discover the number of columns in the UNION, and perhaps also the datatypes of each column (numeric, text, date, etc). For a boolean blind, you will want to be able to trigger different pages responses for True and False conditions, and determine how you could differentiate the True response from the False. For a time based blind, you want to get a response to delay for a given period of seconds based on the success or failure of some comparison you make, etc. This step will also include working out whether any specific characters are restricted by some sort of filter or other application issue, and hence are unusable in performing the injection.
+
+Run sqlmap, configuring the backend database type (--dbms), Operating System (--os), and technique (--technique) options to specifically target the manually discovered issue. Set the parameter (-p)  option as well if the injection is in a URL or POST data parameter, or use other options such as the injection point asterisk (*) as appropriate to tell sqlmap exactly where the injection is located. This helps focus the detection process, minimising requests sent and time taken by ignoring non-vulnerable parameters and payloads that target other databases or are associated with unwanted injection techniques. You may also need to provide proxy details, cookies or other authentication options, CSRF management options, safe URL settings to avoid lockouts, etc as appropriate, to ensure that sqlmap can correctly send and receive HTTP requests and responses. If you have already created a manual injection POC in a separate tool you should already know all the correct settings to use for this purpose.  Leave all other options at the default. I do all my manual testing using Burp Suite Professional, so I use the CO2 plugin and its SQLMapper component to quickly set the relevant command line options.  From this point on in the process, as soon as you get sqlmap to detect the vulnerability, you can skip the remaining steps (hopefully thats obvious). 
+
+Run the detection again, however this time use the -v3 verbose option on so you can see the payloads being sent.  Scroll through the output, looking for an injection string thats similar in layout to the POC developed earlier, which will cause the response you require. At this point you may see the names of likely looking payloads that are not being sent here because the --level or --risk settings are too low. If so, raise these values and try again and see if you can find an appropriate payload that comes as close as possible to what you need.
+
+If at this point you still do not see a payload that looks like it will be able to provide the output needed to make the injection succeed, you will need to write your own. Pick an example from the xml file named after the appropriate injection technique thats as close as possible to what you need, and modify as required.  The earlier section on custom test payloads contains references that help describe this process, and a future post in this series will also have a specific example.
+
+Once sqlmap is sending a payload that is logically similar to your POC, the goal is to now tweak the relevant sqlmap options to get the request syntactically correct for the injection.  At this point you will want to set the --test-filter option in order to send only your chosen payload, and try and determine what needs to change with the payload to make it work. By "work" I mean that you must be creating injected queries that are syntactically correct and the results must not involve database errors, displayed to you or otherwise, UNLESS you are doing error based injection and that error is displayed to you and contains your chosen content. This troubleshooting may involve taking the payload from the sqlmap verbose output and pasting it into your manual testing tool (i.e. Burp Suite Professional's Repeater) to see if it returns a syntactically correct result. Sometimes however, you can just eyeball it and tell where there are some obvious issues. The next step provides guidance on how to fix syntax issues.
+
+If the payload being sent is resulting in a SQL query that is NOT syntactically correct, there are 3 primary reasons for this.  Work out which issue (or combination of issues) is causing the problem, and work to resolve these as discussed below before moving on to the next step.
+
+The first possible reason is that the prefix and suffix have been set incorrectly (either manually by you or automatically by sqlmap). You know this is the case if the text used at the start of the payload to break into the injection, or the text at the end used to terminate it, are syntactically different from your POC. Correctly set the suffix and prefix options to fix this - the right values should be easy to identify as they will be included in your manual POC. Be aware here that certain test payloads are configured to place random values at the start of the payload output. If you set the --prefix option and don't see the configured string at the very start of the payload output you are using in sqlmap's verbose output, you know that the payload configuration itself is the cause (specifically, the where option in the payload configuration), which is the second possible reason.
+Second, the definition of the test payload itself is causing an error for some reason. I have seen the sqlmap default payloads break in some cases, but the most likely way for this to occur is when you have written the payload yourself. If the text or logic or the placement of the random values used by sqlmap in the meat of the payload is causing the issue, the problem might be with the definition of the test payload (or you might be focusing on using the wrong payload and another one you have overlooked is more appropriate). Modify the payload, try a different one, or create a your own custom new one to fix this.
+Third, there is some sort of filter implemented in the space between when you send the request and when the resultant query reaches the database that is causing an otherwise syntactically correct payload to be rejected. This is where tamper scripts can be used to (hopefully) filter out or replace the offending characters. Don't forget to bump your verbosity setting to -v4 in order to see HTTP requests in the output if you need to troubleshoot these. You can either use one of the existing tamper scripts (if a suitable one exists) or write your own. If the filtering is particularly prohibitive, you may need to consider writing a payload that makes use of inventive SQL to avoid your given bad patterns.
+
+Once your queries are syntactically correct, the next step is ensuring that sqlmap can correctly interpret the results it is receiving (and, in the case of second order injections, that it is receiving the correct results at all!). Setting aside second-order injections for the moment (we will cover this in more detail in a future example), sqlmap is generally pretty good at this for all of its techniques other than boolean blind injection. For these, you will often need to tell it how to distinguish True from False responses. This is where the detection options such as --string, --not-string and --regex discussed earlier come into play - use these to help sqlmap identify the appropriate responses.
+
+sqlmap repository structure
+Let’s start from the bottom up:
+
+sqlmapapi.py: sqlmap can be used as an API, which is something we’ll look at later in this course, but this serves as the entry point to enable and control our API
+
+sqlmap.py: this, on the other hand, is the entry point for using sqlmap itself (python sqlmap.py -h)
+
+sqlmap.conf: this is the configuration file for sqlmap’s options, so this is where we can modify some of sqlmap’s default configuration values in a more permanent way than typing them out in the terminal each time we issue a command
+
+Next we have README, LICENSE, Travis CI (Continuous Integration), pylint code analysis file, and git files
+
+thirdparty: this is where we can see the 3rd party tools needed for certain sqlmap functionality (ie: identywaf used to identify WAFs)
+
+tamper: these are our tamper scripts, which are used to evade security controls (such as WAFs, IPSs, etc). There are over 60 scripts included by default, but we can also add our own
+
+plugins: these are generic and DBMS-specific sets of plugins which are used by sqlmap to connect, fingerprint, enumerate, takover, etc… so these are very important functions
+
+lib: another set of really important functions is in /lib. These are the libraries used by sqlmap, and it contains controller functions, core functions, parse functions, request functions, takeover functions, techniques functions (blind, dns, error, union), and utils (utilities) functions
+
+extra: extra contains additional functionality that doesn’t quite fit in lib or plugins. For example, there is a vulnserver that we can use to test sqlmap functionality. There’s also a cloak script that can be used to encrypt and compress binary files in order to evade anti viruses. When using backdoors through sqlmap, sqlmap automatically takes care of that for you. But if you needed to manually cloak backdoors or other files that could be blocked by detection software, you could manually use cloak.py.
+
+doc: this contains general files about sqlmap’s authors, its changelog, a thanks file for contributors, a list of third parties and their licenses, copyrights, etc, and translations for different languages other than english.
+
+data: finally, we have data which contains a lot of templates and text documents that sqlmap uses extensively during its operations.
+
+html is simply a demo page
+procs contains SQL snippets used on target systems, and so they’re separated by DBMS
+shell contains backdoor and stager shell scripts, useful for the takeover phase
+txt contains common columns, tables, files, outputs, keywords, user-agents, and wordlists, all useful for brute-force operations, fingerprinting, bypassing basic security controls, and masking sqlmap’s identity
+udf stands for user-defined functions, and this contains user-defined function binary files which can be used in the takeover phase to try and create our own functions in the target DBMS, which could help us assume control over that database.
+xml is where you will find payloads for each technique. You will also find something called banner which sqlmap uses to identify which DBMS we’re dealing with, and more specifically, what versions are installed. These files also help identify what webserver is in place, and what languages as well as settings power the application(s) that we’re targeting. We also have:
+boundaries.xml: contains a list of boundaries that are used in SQL queries
+errors.xml: contains known error messages separated by DBMS
+queries.xml: contains the correct syntax for each DBMS for various operations (ie: cast, length, isnull, delimiter, etc)
+.github is just a convention folder used to place GitHub related information inside of it, like the Code of Conduct, Contribution guidelines, how to donate to the project, and the format to follow for opening bug reports or feature requests.
+
+All of this data, all of those functions, and all of those configuration files serve a purpose. They’re there to give sqlmap its functionality. Understanding how its structured and how it works together is important for a number of reasons:
+
+As you become a more advanced user of sqlmap, you can extend its functionality. You can add more tamper scripts. You can change payloads. You can change default configurations, etc…
+If you run across an issue, you can try to troubleshoot yourself before opening an issue ticket, and then if you find a solution, you can propose that solution to the authors of sqlmap
+As changes get pushed to sqlmap, and as you update your version, you can keep track of changes and get a better understanding of what’s been added, fixed, or removed
+Now that we looked at the entire repo and how it’s structured, let’s narrow it down a bit more to some of the most useful directories.
+
+2. Important and useful sqlmap directories
+sqlmap useful directories cheat sheet
+Click for full resolution
+We already briefly mentioned most of these in the prior section, but let’s take a closer look.
+
+/tamper/
+This is where you’ll find tamper scripts, which are used primarily to bypass WAFs and evade security controls.
+
+Using these scripts is simple, as you can use the --tamper option:
+
+--tamper="random,appendnullbyte,between,base64encode"
+Code language: JavaScript (javascript)
+This would instruct sqlmap to use all of the scripts separated by commas.
+
+/data/txt/
+This directory contains text files that sqlmap uses quite extensively during its operations:
+
+common-columns
+common-files
+common-outputs
+common-tables
+keywords
+smalldict
+user-agents
+wordlists
+These files are used for everything from randomizing user-agent header values, to brute-forcing common column/file/table names, to guessing values for optimization.
+
+You can add/remove values in these text files to your heart’s content.
+
+/data/xml/payloads/
+Curious to see what payloads sqlmap is using with its fingerprinting, enumeration, and takeover actions? This is where you’ll find them.
+
+You can also add/remove payloads to your heart’s content.
+
+The payloads are broken down by SQL injection technique:
+
+boolean_blind
+error_based
+inline_query
+stacked_queries
+time_blind
+union_query
+/sqlmap.conf
+This is the heart of sqlmap’s configuration. This file includes defaults for all options that need defaults to function, which means you can change these defaults either directly in this file, or via the terminal when you issue commands. Note that if you update a default in this conf file and then issue a different value via the terminal, the terminal value will take precedence.
+
+/output/
+This directory (usually located at /home/kali/.local/share/sqlmap/output/ if you use kali) is where results from sqlmap commands get stored which you can then explore and review. This is helpful when you need to share results in your reports and with developers, or if you want to perform additional analysis with 3rd party tools.
+
+/history/
+This directory (usually located at /home/kali/.local/share/sqlmap/history/ if you use kali) is where a SQL file gets generated and updated automatically by sqlmap as you issue commands. This essentially acts as a SQLite database which sqlmap can pull from to remember actions and results.
+
+3. Test –levels and the impact they will have on your commands
+sqlmap levels cheat sheet
+Click for full resolution
+This option decides what tests are performed and what tests aren’t performed. Let’s take a look at each level. (You can view payloads and which get triggered at which levels here.)
+
+Level 1
+This is the most basic level. sqlmap tests all GET and POST parameters. So regardless of the level that we choose, GET and POST parameters will always be tested by default, unless we specifically tell sqlmap not to.
+
+Level 2
+This level starts to also look at HTTP Cookie headers for SQL injection vulnerability.
+
+We can also set cookie headers manually with --cookie=COOKIE, and we can use --param-exclude=EXCLUDE to bypass testing of certain cookies that match the given regular expression. We can also skip testing the Cookie headers by using --skip="cookies" or by using -p and not including cookies, even if we have this level enabled.
+
+Examples:
+
+sqlmap -u 'http://localhost:8440/" --level=2
+sqlmap -u 'http://localhost:8440/" --level=2 --cookie="PHPSESSID=..." --param-exclude="PHPSESSID"
+sqlmap -u 'http://localhost:8440/" --level=2 --cookie="PHPSESSID=..." --skip="cookies"
+sqlmap -u 'http://localhost:8440/" --level=2 --cookie="PHPSESSID=..." -p "id"
+Level 3
+This level adds 2 new types of headers into the mix:
+
+HTTP User-Agent header
+HTTP Referer header
+So by including this level, we are now testing for level 1 + level 2 + level 3.
+
+Level 4
+Level 4 seems to mostly implement more payloads for certain types of techniques, not necessarily new headers to test as compared to the other levels. For example:
+
+Boolean-blind level 4 includes, as some examples (there are others):
+MySQL boolean-based blind – Parameter replace (MAKE_SET)
+MySQL boolean-based blind – Parameter replace (ELT)
+MySQL boolean-based blind – Parameter replace (bool*int)
+PostgreSQL boolean-based blind – Parameter replace (original value)
+Microsoft SQL Server/Sybase boolean-based blind – Parameter replace (original value)
+etc… (filter by <level>4</level>)
+Error-based
+Stacked queries
+Time blind
+Union query
+Inline query (only includes tests for levels 1-3)
+Level 5
+Finally, the highest level adds HTTP Host headers to test for SQL injections, as well as additional checks that we can also look for in each respective file.
+
+One thing to keep in mind as you increase the levels, you will be increasing the number of requests, so if you set level 5, it will take significantly longer than if you choose level 2.
+
+1: Always (<100 requests)
+2: Try a bit harder (100-200 requests)
+3: Good number of requests (200-500 requests)
+4: Extensive test (500-1000 requests)
+5: You have plenty of time (>1000 requests)
+Source: https://github.com/sqlmapproject/sqlmap/blob/master/data/xml/payloads/boolean_blind.xml#L21
+Code language: HTTP (http)
+4. –risk levels and the impact they will have on your commands
+sqlmap risk levels cheat sheet
+Click for full resolution
+This option is similar to the --level option, but instead of dictating which headers and techniques to include in tests, this option looks at the risk levels.
+
+Certain payloads that can be used to test for SQL injections can be destructive, because they can make modifications to databases and their entries, or they can take down databases by using resource-intensive queries. In some situations, that could be unacceptable since it would go outside of your testing scope or cause damage to a business. That’s why the authors of sqlmap added 3 levels.
+
+Level 1
+The first level, level 1, is intended to not cause any damage to databases and applications. It is the least offensive of all levels, so it’s a great place to start and is the default value.
+
+Level 2
+The 2nd level starts to add heavy time-based SQL injection queries. This can slow down the database or even potentially take it down. So be careful when using this risk level.
+
+Level 3
+The 3rd and final risk level adds OR based SQL injection tests. The reason this is in the highest risk level is because injecting OR payloads in certain queries can actually lead to updates of entries in database tables. Changing data in the database is never what you would want unless you are testing a throw-away environment and database. If you were to do that in a production environment, it could have disastrous consequences.
+
+Only use this risk level if you know what you are doing, if you have explicit permissions, and if everyone is on the same page as to what this risk level does.
+
+To get a comprehensive list of which payloads get executed at which risk levels, you can again take a look at all of the default payloads that sqlmap uses here. You can also add your own or make modifications, by the way, as you become a more advanced user of sqlmap, and to customize it to your needs or your client’s needs.
+
+5. Verbosity levels for troubleshooting and to see what sqlmap is doing under the hood
+sqlmap verbosity levels cheat sheet
+Click for full resolution
+Verbosity is used to control how much information sqlmap outputs when we’re using the tool. Some people may want more feedback from the tool to understand what’s going on and to debug, while others may find all of that extra information unnecessary.
+
+By default, sqlmap uses a verbosity level of 1, which they define as Show Python tracebacks, errors, and critical messages from level 0, plus Show information and warning messages
+
+So each of these levels stack on top of each other:
+
+0: Show only Python tracebacks, error and critical messages.
+1: Show also information and warning messages.
+2: Show also debug messages.
+3: Show also payloads injected.
+4: Show also HTTP requests.
+5: Show also HTTP response headers.
+6: Show also HTTP response page content.
+Again, this is personal preference and it depends on what you’re doing, but level 2 is recommended for the detection and takeover phases.
+
+Level 3 is recommended if you want to see what payloads are being injected and if you want to be able to share those payloads with your developers or your client in order to show them exactly what worked and what didn’t work.
+
+Otherwise, levels 4 – 6 include HTTP requests information, response headers, and response page content, which would be a lot of information to sift through, so it’s not recommended unless you absolutely need to know that information.
+
+One more note to take here is that you can also replace the numeric values for this option (ie: -v 4) with the corresponding number of vs (ie: -vvvv)
+
+sqlmap -v 4 
+sqlmap -vvvv
+You can also further filter results with grep:
+
+sqlmap -v 4 | grep <filter>
+Code language: HTML, XML (xml)
+This option has to be used with other mandatory options, so if you try to set it by itself, it will give you an error and ask you to provide another mandatory option. This means you have to set the verbosity level for each of your commands, unless you set it in the sqlmap configuration file.
+
+6. List of sqlmap’s Tamper scripts and what they do
+
+Click for full resolution
+sqlmap, by default, does very little to obfuscate payloads. Obfuscation, if you’re not familiar with the term already, is the act of hiding the true intention of our payload, which is a technique used to try and evade detection because it makes the payload deliberately difficult to understand. Just by looking at it, you wouldn’t be able to tell that it’s malicious.
+
+This could be a problem if you’re trying to evade WAFs, IPSs, or other types of security controls and monitoring systems.
+
+So in cases that you are trying to bypass input validation, or trying to slip through a Web Application Firewall, you may want to try and use --tamper options.
+
+With this option, you can pass in a number of different values that are all separated by commas, and these values will load different tampering scripts. You can also create your own tamper scripts.
+
+For example:
+
+--tamper="between,randomcase"
+Code language: JavaScript (javascript)
+You can also use this command to list all of the tamper scripts in your terminal:
+
+--list-tampers
+Code language: PHP (php)
+If we navigate to /tamper on GitHub, we’ll find a list of all the included tamper scripts. From there, we can click on one and see what the code does, since these are all python scripts. To make it a little bit easier, you can download the cheat sheet above which includes all of the available tamper scripts and a brief description of what each one does.
+
+sqlmap user's manual
+
+by Bernardo Damele A. G. , Miroslav Stampar                                            version 0.9, April 10, 2011
+
+
+This document is the user's manual to use sqlmap .
+
+
+
+
+Contents
+1 Introduction                                                                                                    4
